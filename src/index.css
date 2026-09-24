@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Tajawal", "Cairo", ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  background-color: #f4f6f9;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Print styles */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+  #print-badge-area, #print-badge-area * {
+    visibility: visible;
+  }
+  #print-badge-area {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10mm;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    width: 85.6mm;
+    height: auto;
+    margin: auto;
+    inset: 0;
+  }
+  #print-badge-area > #print-badge-front,
+  #print-badge-area > #print-badge-back {
+    width: 342px !important;
+    height: 216px !important;
+    flex: none;
+    transform: scale(0.945);
+    transform-origin: center;
+  }
+  @page {
+    size: auto;
+    margin: 0;
+  }
+}
