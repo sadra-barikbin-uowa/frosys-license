@@ -3,7 +3,7 @@ import { storage } from "./storage";
 const SETTINGS_KEY = "settings";
 
 const defaults = {
-  organizationName: "نظام إدارة السائقين والمركبات",
+  organizationName: "نظام وارث لادارة المركبات",
   badgeValidityYears: 1,
   expiringSoonDays: 30,
 };

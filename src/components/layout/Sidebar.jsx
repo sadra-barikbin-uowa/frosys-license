@@ -52,10 +52,15 @@ const Sidebar = ({ role, mobileOpen, onCloseMobile }) => {
           <ShieldCheck size={20} className="text-white" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-bold text-slate-800 truncate">نظام إدارة السائقين</p>
+          <p className="text-sm font-bold text-slate-800 truncate">
+            نظام وارث لادارة المركبات
+          </p>
           <p className="text-[11px] text-slate-400">والمركبات</p>
         </div>
-        <button onClick={onCloseMobile} className="mr-auto lg:hidden text-slate-400 p-1">
+        <button
+          onClick={onCloseMobile}
+          className="mr-auto lg:hidden text-slate-400 p-1"
+        >
           <X size={18} />
         </button>
       </div>
@@ -94,8 +99,12 @@ const Sidebar = ({ role, mobileOpen, onCloseMobile }) => {
             {user?.name?.charAt(0) || "؟"}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-800 truncate">{user?.name}</p>
-            <p className="text-[11px] text-slate-400">{role === "admin" ? "مدير النظام" : "موظف"}</p>
+            <p className="text-sm font-semibold text-slate-800 truncate">
+              {user?.name}
+            </p>
+            <p className="text-[11px] text-slate-400">
+              {role === "admin" ? "مدير النظام" : "موظف"}
+            </p>
           </div>
         </div>
       </div>
@@ -112,7 +121,10 @@ const Sidebar = ({ role, mobileOpen, onCloseMobile }) => {
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-slate-900/50" onClick={onCloseMobile} />
+          <div
+            className="absolute inset-0 bg-slate-900/50"
+            onClick={onCloseMobile}
+          />
           <aside className="absolute top-0 right-0 h-full w-72 bg-white shadow-2xl animate-[fadeIn_.15s_ease-out]">
             {content}
           </aside>
