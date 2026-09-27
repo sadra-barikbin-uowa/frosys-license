@@ -49,6 +49,7 @@ export const driverService = {
     storage.write("badges", badges.map((badge) => badge.driverId === id ? {
       ...badge,
       ...(data.fullName !== undefined ? { driverName: data.fullName } : {}),
+      ...(data.personType !== undefined ? { personType: data.personType } : {}),
       ...(data.photo !== undefined ? { driverPhoto: data.photo } : {}),
       ...(data.nationalId !== undefined ? { nationalId: data.nationalId } : {}),
       ...(data.licenseNumber !== undefined ? { licenseNumber: data.licenseNumber } : {}),

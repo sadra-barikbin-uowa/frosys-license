@@ -8,6 +8,7 @@ export const validateDriverForm = (data) => {
   const errors = {};
 
   if (!required(data.fullName)) errors.fullName = "الاسم الكامل مطلوب";
+  if (!required(data.personType)) errors.personType = "صفة حامل البطاقة مطلوبة";
   if (!required(data.nationalId)) errors.nationalId = "رقم الهوية الوطنية مطلوب";
   if (!required(data.phone)) errors.phone = "رقم الهاتف مطلوب";
   else if (!/^[0-9+\s-]{7,15}$/.test(data.phone.trim()))

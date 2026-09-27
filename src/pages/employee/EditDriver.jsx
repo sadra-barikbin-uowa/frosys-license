@@ -34,6 +34,7 @@ const EditDriver = ({ role = "employee" }) => {
 			setVehicleId(vehicle?.id || null);
 			setData({
 				fullName: driver.fullName || "",
+				personType: driver.personType || "",
 				fatherName: driver.fatherName || "",
 				motherName: driver.motherName || "",
 				birthDate: driver.birthDate || "",
@@ -71,6 +72,7 @@ const EditDriver = ({ role = "employee" }) => {
 		try {
 			const driverUpdates = {
 				fullName: data.fullName,
+				personType: data.personType,
 				fatherName: data.fatherName,
 				motherName: data.motherName,
 				birthDate: data.birthDate,

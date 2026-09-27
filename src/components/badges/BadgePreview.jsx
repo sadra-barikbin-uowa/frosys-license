@@ -7,6 +7,7 @@ import {
 	BADGE_STATUS,
 } from "../../utils/badgeStatus";
 import { vehicleTypeLabel } from "../../data/vehicleTypes";
+import { personTypeLabel } from "../../data/personTypes";
 
 // البطاقة بنسبة ID Card حقيقية 85.6mm x 54mm (1.586 : 1)
 // معروضة هنا بحجم مكبّر مناسب للشاشة، لكن بنفس النسبة تمامًا لضمان طباعة دقيقة
@@ -91,6 +92,9 @@ const BadgePreview = ({ data, id = "badge-preview", side = "front" }) => {
 				<div className="flex-1 min-w-0 pt-6">
 					<p className="text-[12px] font-bold text-slate-800 truncate">
 						{data.driverName || data.fullName || "اسم السائق الثلاثي"}
+					</p>
+					<p className="mt-0.5 text-[8px] font-semibold text-indigo-700">
+						{personTypeLabel(data.personType)}
 					</p>
 					<div className="mt-1 grid grid-cols-1 gap-0.5">
 						<p className="text-[8px] text-slate-500">

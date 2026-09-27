@@ -16,6 +16,7 @@ import { addYears, todayISO } from "../../utils/formatDate";
 
 const initialState = {
 	fullName: "",
+	personType: "",
 	fatherName: "",
 	motherName: "",
 	birthDate: "",
@@ -60,6 +61,7 @@ const AddDriver = ({ role = "employee" }) => {
 		try {
 			const newDriver = await driverService.createDriver({
 				fullName: data.fullName,
+				personType: data.personType,
 				fatherName: data.fatherName,
 				motherName: data.motherName,
 				birthDate: data.birthDate,
@@ -94,6 +96,7 @@ const AddDriver = ({ role = "employee" }) => {
 				driverId: newDriver.id,
 				vehicleId: newVehicle.id,
 				driverName: data.fullName,
+				personType: data.personType,
 				driverPhoto: data.photo,
 				nationalId: data.nationalId,
 				licenseNumber: data.licenseNumber,

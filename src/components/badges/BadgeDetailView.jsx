@@ -21,6 +21,7 @@ import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
 import { printBadge } from "./PrintBadge";
 import { VEHICLE_TYPES } from "../../data/vehicleTypes";
+import { PERSON_TYPES, personTypeLabel } from "../../data/personTypes";
 
 const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 	const navigate = useNavigate();
@@ -94,6 +95,7 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 
 	const rows = [
 		["اسم السائق", currentBadge.driverName],
+		["صفة حامل البطاقة", personTypeLabel(currentBadge.personType)],
 		["رقم الهوية", currentBadge.nationalId],
 		["رقم رخصة القيادة", currentBadge.licenseNumber],
 		["نوع المركبة", vehicleTypeLabel(currentBadge.vehicleType)],
@@ -258,6 +260,12 @@ const EditBadgeForm = ({ data, onChange, setDraftValue }) => (
 					label="اسم السائق"
 					value={data.driverName || data.fullName || ""}
 					onChange={setDraftValue("driverName")}
+				/>
+				<Select
+					label="صفة حامل البطاقة"
+					value={data.personType || ""}
+					onChange={setDraftValue("personType")}
+					options={PERSON_TYPES}
 				/>
 				<Input
 					label="الرقم الوطني"

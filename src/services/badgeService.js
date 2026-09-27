@@ -62,6 +62,7 @@ export const badgeService = {
     storage.write(BADGES_KEY, updated);
     const driverUpdates = {
       fullName: data.driverName || data.fullName,
+      personType: data.personType,
       photo: data.driverPhoto || data.photo,
       nationalId: data.nationalId,
       licenseNumber: data.licenseNumber,
