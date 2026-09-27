@@ -1,20 +1,29 @@
 import { storage } from "../services/storage";
-import { buildSeedData } from "./seedData";
 
-// يضمن تزامن بيانات السائقين والمركبات والبطاقات عند أول تشغيل فقط
+// Initialize missing collections without replacing data already in LocalStorage.
 let seeded = false;
 
 export const ensureAllSeeded = () => {
   if (seeded) return;
-  const hasDrivers = storage.read("drivers", null);
-  const hasVehicles = storage.read("vehicles", null);
-  const hasBadges = storage.read("badges", null);
+  ["drivers", "vehicles", "badges"].forEach((key) => {
+    if (storage.read(key, null) === null) storage.write(key, []);
+  });
 
-  if (!hasDrivers || !hasVehicles || !hasBadges) {
-    const { drivers, vehicles, badges } = buildSeedData();
-    if (!hasDrivers) storage.write("drivers", drivers);
-    if (!hasVehicles) storage.write("vehicles", vehicles);
-    if (!hasBadges) storage.write("badges", badges);
+  const legacySamples = {
+    drivers: /^DR-\d{5}$/,
+    vehicles: /^VH-\d{5}$/,
+    badges: /^BD-\d{5}$/,
+  };
+  Object.entries(legacySamples).forEach(([key, sampleId]) => {
+    const records = storage.read(key, []);
+    const retained = records.filter((record) => !sampleId.test(record.id));
+    if (retained.length !== records.length) storage.write(key, retained);
+  });
+
+  const users = storage.read("users", null);
+  if (users) {
+    const retainedUsers = users.filter((user) => !["EMP-001", "EMP-002", "EMP-003"].includes(user.id));
+    if (retainedUsers.length !== users.length) storage.write("users", retainedUsers);
   }
   seeded = true;
 };

@@ -1,10 +1,12 @@
 import { storage } from "./storage";
 import { mockUsers } from "../data/mockUsers";
+import { ensureAllSeeded } from "../data/ensureSeeded";
 
 const USERS_KEY = "users";
 const CURRENT_USER_KEY = "currentUser";
 
 const ensureUsersSeeded = () => {
+  ensureAllSeeded();
   const existing = storage.read(USERS_KEY, null);
   if (!existing) {
     storage.write(USERS_KEY, mockUsers);

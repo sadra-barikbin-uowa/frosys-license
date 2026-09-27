@@ -27,6 +27,11 @@ export const driverService = {
     return ensureSeeded().find((d) => d.id === id) || null;
   },
 
+  async getDriverByIdForEmployee(id, employeeId) {
+    await storage.delay();
+    return ensureSeeded().find((driver) => driver.id === id && driver.createdBy === employeeId) || null;
+  },
+
   async createDriver(data) {
     await storage.delay();
     const drivers = ensureSeeded();
@@ -40,13 +45,34 @@ export const driverService = {
     const drivers = ensureSeeded();
     const updated = drivers.map((d) => (d.id === id ? { ...d, ...data } : d));
     storage.write(DRIVERS_KEY, updated);
+    const badges = storage.read("badges", []);
+    storage.write("badges", badges.map((badge) => badge.driverId === id ? {
+      ...badge,
+      ...(data.fullName !== undefined ? { driverName: data.fullName } : {}),
+      ...(data.photo !== undefined ? { driverPhoto: data.photo } : {}),
+      ...(data.nationalId !== undefined ? { nationalId: data.nationalId } : {}),
+      ...(data.licenseNumber !== undefined ? { licenseNumber: data.licenseNumber } : {}),
+    } : badge));
     return updated.find((d) => d.id === id);
+  },
+
+  async updateDriverForEmployee(id, employeeId, data) {
+    const driver = await driverService.getDriverByIdForEmployee(id, employeeId);
+    if (!driver) return null;
+    return driverService.updateDriver(id, data);
   },
 
   async deleteDriver(id) {
     await storage.delay();
     const drivers = ensureSeeded();
+    const driver = drivers.find((item) => item.id === id);
     storage.write(DRIVERS_KEY, drivers.filter((d) => d.id !== id));
+    if (driver?.vehicleId) {
+      const vehicles = storage.read("vehicles", []);
+      storage.write("vehicles", vehicles.filter((vehicle) => vehicle.id !== driver.vehicleId));
+    }
+    const badges = storage.read("badges", []);
+    storage.write("badges", badges.filter((badge) => badge.driverId !== id));
     return true;
   },
 };

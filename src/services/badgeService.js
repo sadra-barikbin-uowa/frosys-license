@@ -24,6 +24,12 @@ export const badgeService = {
     return badge ? { ...badge, status: computeBadgeStatus(badge) } : null;
   },
 
+  async getBadgeByIdForEmployee(id, employeeId) {
+    await storage.delay();
+    const badge = ensureSeeded().find((b) => b.id === id && b.createdBy === employeeId);
+    return badge ? { ...badge, status: computeBadgeStatus(badge) } : null;
+  },
+
   async getBadgesByEmployee(employeeId) {
     await storage.delay();
     return ensureSeeded()
@@ -36,13 +42,12 @@ export const badgeService = {
     const badges = ensureSeeded();
     const badgeNumber = generateBadgeNumber();
     const newBadge = {
-      id: generateId("BD"),
-      badgeNumber,
       issueDate: new Date().toISOString().slice(0, 10),
       status: "Active",
       createdAt: new Date().toISOString(),
       ...data,
-      badgeNumber, // تأكيد عدم الكتابة فوق الرقم المُولّد
+      id: generateId("BD"),
+      badgeNumber,
     };
     storage.write(BADGES_KEY, [newBadge, ...badges]);
     return newBadge;
@@ -51,9 +56,40 @@ export const badgeService = {
   async updateBadge(id, data) {
     await storage.delay();
     const badges = ensureSeeded();
+    const current = badges.find((badge) => badge.id === id);
+    if (!current) return null;
     const updated = badges.map((b) => (b.id === id ? { ...b, ...data } : b));
     storage.write(BADGES_KEY, updated);
+    const driverUpdates = {
+      fullName: data.driverName || data.fullName,
+      photo: data.driverPhoto || data.photo,
+      nationalId: data.nationalId,
+      licenseNumber: data.licenseNumber,
+    };
+    if (current.driverId) {
+      const drivers = storage.read("drivers", []);
+      storage.write("drivers", drivers.map((driver) => driver.id === current.driverId
+        ? { ...driver, ...Object.fromEntries(Object.entries(driverUpdates).filter(([, value]) => value !== undefined)) }
+        : driver));
+    }
+    if (current.vehicleId) {
+      const vehicles = storage.read("vehicles", []);
+      storage.write("vehicles", vehicles.map((vehicle) => vehicle.id === current.vehicleId
+        ? { ...vehicle,
+          ...(data.vehicleType !== undefined ? { vehicleType: data.vehicleType } : {}),
+          ...(data.vehicleNumber !== undefined ? { vehicleNumber: data.vehicleNumber } : {}),
+          ...(data.vehicleModel !== undefined ? { model: data.vehicleModel } : {}),
+          ...(data.vehicleColor !== undefined ? { color: data.vehicleColor } : {}),
+        }
+        : vehicle));
+    }
     return updated.find((b) => b.id === id);
+  },
+
+  async updateBadgeForEmployee(id, employeeId, data) {
+    const badge = await badgeService.getBadgeByIdForEmployee(id, employeeId);
+    if (!badge) return null;
+    return badgeService.updateBadge(id, data);
   },
 
   async setBadgeStatus(id, status) {

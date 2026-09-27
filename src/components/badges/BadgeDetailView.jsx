@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Printer, ArrowRight, CreditCard, Pencil } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Printer, ArrowRight, CreditCard, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import BadgePreview from "./BadgePreview";
 import PrintBadge from "./PrintBadge";
@@ -18,15 +18,21 @@ import {
 import { vehicleTypeLabel } from "../../data/vehicleTypes";
 import { badgeService } from "../../services/badgeService";
 import { useToast } from "../../context/ToastContext";
+import { useAuth } from "../../context/AuthContext";
 import { printBadge } from "./PrintBadge";
+import { VEHICLE_TYPES } from "../../data/vehicleTypes";
 
 const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
+	const navigate = useNavigate();
+	const { user } = useAuth();
 	const [searchParams] = useSearchParams();
 	const { showToast } = useToast();
 	const [currentBadge, setCurrentBadge] = useState(badge);
 	const [editing, setEditing] = useState(false);
 	const [draft, setDraft] = useState(null);
 	const [saving, setSaving] = useState(false);
+	const [confirmDelete, setConfirmDelete] = useState(false);
+	const [previewSide, setPreviewSide] = useState("front");
 
 	useEffect(() => {
 		setCurrentBadge(badge);
@@ -55,21 +61,35 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 	const saveChanges = async () => {
 		setSaving(true);
 		try {
-			const updated = await badgeService.updateBadge(currentBadge.id, {
-				...draft,
-				driverName: draft.driverName || draft.fullName,
-				driverPhoto: draft.photo || null,
-				photo: draft.photo || null,
-			});
+			const updated = showEmployee
+				? await badgeService.updateBadge(currentBadge.id, {
+						...draft,
+						driverName: draft.driverName || draft.fullName,
+						driverPhoto: draft.photo || null,
+						photo: draft.photo || null,
+					})
+				: await badgeService.updateBadgeForEmployee(currentBadge.id, user.id, {
+						...draft,
+						driverName: draft.driverName || draft.fullName,
+						driverPhoto: draft.photo || null,
+						photo: draft.photo || null,
+					});
+			if (!updated) throw new Error("Badge not found or access denied");
 			setCurrentBadge(updated);
 			setEditing(false);
-			showToast("تم حفظ تعديلات البطاقة", "success");
+			showToast("تم تحديث البطاقة بنجاح", "success");
 		} catch (error) {
 			console.error(error);
 			showToast("تعذر حفظ تعديلات البطاقة", "error");
 		} finally {
 			setSaving(false);
 		}
+	};
+
+	const handleDelete = async () => {
+		await badgeService.deleteBadge(currentBadge.id);
+		showToast("تم حذف البطاقة بنجاح", "success");
+		navigate(backPath);
 	};
 
 	const rows = [
@@ -81,6 +101,8 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 		["موديل المركبة", currentBadge.vehicleModel || "—"],
 		["لون المركبة", currentBadge.vehicleColor || "—"],
 		["تاريخ الإصدار", formatDate(currentBadge.issueDate)],
+		["رقم البطاقة", currentBadge.badgeNumber],
+		["الحالة", badgeStatusLabel(currentBadge)],
 		["تاريخ الانتهاء", formatDate(currentBadge.expiryDate)],
 	];
 	if (showEmployee)
@@ -99,6 +121,15 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 					<ArrowRight size={16} /> رجوع
 				</Link>
 				<div className="flex items-center gap-2">
+					{showEmployee && (
+						<Button
+							icon={Trash2}
+							variant="danger"
+							onClick={() => setConfirmDelete(true)}
+						>
+							حذف
+						</Button>
+					)}
 					<Button icon={Pencil} variant="secondary" onClick={startEditing}>
 						تعديل بيانات البطاقة
 					</Button>
@@ -111,7 +142,28 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 			<div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
 				<div className="bg-white rounded-xl ring-1 ring-slate-100 shadow-sm p-6 flex flex-col items-center gap-4">
 					<div className="screen-badge-preview">
-						<BadgePreview data={currentBadge} />
+						<BadgePreview data={currentBadge} side={previewSide} />
+					</div>
+					<div
+						className="flex gap-1 rounded-lg bg-slate-100 p-1 no-print"
+						role="tablist"
+						aria-label="وجه البطاقة"
+					>
+						{[
+							["front", "الوجه الأمامي"],
+							["back", "الوجه الخلفي"],
+						].map(([side, label]) => (
+							<button
+								key={side}
+								type="button"
+								role="tab"
+								aria-selected={previewSide === side}
+								onClick={() => setPreviewSide(side)}
+								className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${previewSide === side ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+							>
+								{label}
+							</button>
+						))}
 					</div>
 					<span
 						className={`text-xs font-semibold px-3 py-1.5 rounded-full ${badgeStatusStyle(currentBadge)}`}
@@ -169,6 +221,26 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 					/>
 				)}
 			</Modal>
+
+			<Modal
+				open={confirmDelete}
+				onClose={() => setConfirmDelete(false)}
+				title="حذف البطاقة"
+				footer={
+					<>
+						<Button variant="secondary" onClick={() => setConfirmDelete(false)}>
+							إلغاء
+						</Button>
+						<Button variant="danger" onClick={handleDelete}>
+							حذف
+						</Button>
+					</>
+				}
+			>
+				<p className="text-sm text-slate-600">
+					هل أنت متأكد من حذف هذه البيانات؟ لا يمكن التراجع عن هذا الإجراء.
+				</p>
+			</Modal>
 		</div>
 	);
 };
@@ -206,13 +278,7 @@ const EditBadgeForm = ({ data, onChange, setDraftValue }) => (
 					label="نوع المركبة"
 					value={data.vehicleType || ""}
 					onChange={setDraftValue("vehicleType")}
-					options={[
-						{ value: "car", label: "سيارة" },
-						{ value: "taxi", label: "أجرة" },
-						{ value: "motorcycle", label: "دراجة نارية" },
-						{ value: "truck", label: "مركبة نقل" },
-						{ value: "other", label: "أخرى" },
-					]}
+					options={VEHICLE_TYPES.map(({ value, label }) => ({ value, label }))}
 				/>
 				<Input
 					label="رقم المركبة"

@@ -34,6 +34,14 @@ export const vehicleService = {
     const vehicles = ensureSeeded();
     const updated = vehicles.map((v) => (v.id === id ? { ...v, ...data } : v));
     storage.write(VEHICLES_KEY, updated);
+    const badges = storage.read("badges", []);
+    storage.write("badges", badges.map((badge) => badge.vehicleId === id ? {
+      ...badge,
+      ...(data.vehicleNumber !== undefined ? { vehicleNumber: data.vehicleNumber } : {}),
+      ...(data.vehicleType !== undefined ? { vehicleType: data.vehicleType } : {}),
+      ...(data.model !== undefined ? { vehicleModel: data.model } : {}),
+      ...(data.color !== undefined ? { vehicleColor: data.color } : {}),
+    } : badge));
     return updated.find((v) => v.id === id);
   },
 
@@ -41,6 +49,8 @@ export const vehicleService = {
     await storage.delay();
     const vehicles = ensureSeeded();
     storage.write(VEHICLES_KEY, vehicles.filter((v) => v.id !== id));
+    const badges = storage.read("badges", []);
+    storage.write("badges", badges.filter((badge) => badge.vehicleId !== id));
     return true;
   },
 };
