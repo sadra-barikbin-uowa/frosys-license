@@ -5,7 +5,7 @@ import Avatar from "../common/Avatar";
 const DriverCard = ({ driver, basePath = "/employee/drivers", showEmployee = false }) => (
 	<Link
 		to={`${basePath}/${driver.id}`}
-		className="bg-white rounded-xl ring-1 ring-slate-100 shadow-sm p-4 flex items-center gap-3 hover:shadow-md hover:ring-indigo-100 transition-all"
+		className="surface-link p-4 flex items-center gap-3"
 	>
 		<Avatar src={driver.photo} alt={driver.fullName} size="md" />
 		<div className="min-w-0 flex-1">

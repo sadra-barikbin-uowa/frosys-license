@@ -86,7 +86,7 @@ const MyBadges = () => {
 			) : error ? (
 				<ErrorState onRetry={reload} />
 			) : filtered.length === 0 ? (
-				<div className="bg-white rounded-xl ring-1 ring-slate-100">
+				<div className="surface">
 					<EmptyState
 						icon={CreditCard}
 						title={query || status ? "لا توجد بطاقات مطابقة" : "لم تقم بإنشاء أي بطاقة بعد"}

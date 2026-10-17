@@ -10,6 +10,7 @@ import {
 	FilePlus2,
 } from "lucide-react";
 import StatCard from "../../components/common/StatCard";
+import HeroBanner from "../../components/common/HeroBanner";
 import Button from "../../components/common/Button";
 import EmptyState from "../../components/common/EmptyState";
 import ErrorState from "../../components/common/ErrorState";
@@ -50,21 +51,22 @@ const EmployeeDashboard = () => {
 
 	return (
 		<>
-			<div className="mb-6">
-				<h1 className="text-xl sm:text-2xl font-bold text-slate-800">مرحبًا، {user.name} 👋</h1>
-				<p className="text-sm text-slate-500 mt-1">إليك ملخص نشاطك في النظام</p>
-			</div>
+			<HeroBanner
+				title={`مرحبًا، ${user.name} 👋`}
+				description="إليك ملخص نشاطك في النظام. أضف سائقًا جديدًا أو أصدر بطاقة بنقرة واحدة."
+				actions={
+					<>
+						<Button to="/employee/drivers/add" icon={UserPlus} variant="light">
+							إضافة سائق
+						</Button>
+						<Button to="/employee/badges/create" icon={FilePlus2} variant="glass">
+							إصدار بطاقة
+						</Button>
+					</>
+				}
+			/>
 
-			<div className="flex flex-wrap gap-3 mb-6">
-				<Button to="/employee/drivers/add" icon={UserPlus}>
-					إضافة سائق
-				</Button>
-				<Button to="/employee/badges/create" icon={FilePlus2} variant="secondary">
-					إصدار بطاقة
-				</Button>
-			</div>
-
-			<div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+			<div className="grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 mb-8">
 				<StatCard
 					label="السائقون المضافون"
 					value={value(drivers.length)}
@@ -121,7 +123,7 @@ const EmployeeDashboard = () => {
 			) : error ? (
 				<ErrorState onRetry={reload} />
 			) : badges.length === 0 ? (
-				<div className="bg-white rounded-xl ring-1 ring-slate-100">
+				<div className="surface">
 					<EmptyState
 						icon={CreditCard}
 						title="لم تقم بإنشاء أي بطاقة بعد"

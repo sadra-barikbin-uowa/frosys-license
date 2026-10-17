@@ -2,7 +2,7 @@ import { vehicleTypeLabel } from "../../data/vehicleTypes";
 import VehicleTypeIcon from "./VehicleTypeIcon";
 
 const VehicleCard = ({ vehicle }) => (
-	<div className="bg-white rounded-xl ring-1 ring-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+	<div className="surface-link overflow-hidden">
 		<div className="h-32 bg-slate-100 overflow-hidden">
 			{vehicle.photo ? (
 				<img

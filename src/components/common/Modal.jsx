@@ -81,7 +81,7 @@ const ModalDialog = ({ onClose, title, children, footer, size, dismissible }) =>
 				aria-modal="true"
 				aria-labelledby={titleId}
 				tabIndex={-1}
-				className={`relative w-full ${SIZES[size]} bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[92dvh] sm:max-h-[90dvh] flex flex-col animate-[fadeIn_.2s_ease-out] outline-none`}
+				className={`relative w-full ${SIZES[size]} bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[92dvh] sm:max-h-[90dvh] flex flex-col animate-[fadeIn_.2s_ease-out] outline-none`}
 			>
 				<div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-slate-100">
 					<h3 id={titleId} className="text-base font-bold text-slate-800">

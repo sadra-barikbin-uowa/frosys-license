@@ -1,6 +1,17 @@
 import { Link } from "react-router-dom";
-import { CreditCard, CheckCircle2, XCircle, Clock, Users, Car, UserCog } from "lucide-react";
-import PageHeader from "../../components/common/PageHeader";
+import {
+	CreditCard,
+	CheckCircle2,
+	XCircle,
+	Clock,
+	Users,
+	Car,
+	UserCog,
+	UserPlus,
+	FilePlus2,
+} from "lucide-react";
+import HeroBanner from "../../components/common/HeroBanner";
+import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
 import StatCard from "../../components/common/StatCard";
 import ErrorState from "../../components/common/ErrorState";
@@ -45,12 +56,22 @@ const AdminDashboard = () => {
 
 	return (
 		<>
-			<PageHeader
+			<HeroBanner
 				title="لوحة تحكم الإدارة"
-				description="إدارة ومتابعة السائقين والمركبات والبطاقات التعريفية"
+				description="إدارة ومتابعة السائقين والمركبات والبطاقات التعريفية من مكان واحد."
+				actions={
+					<>
+						<Button to="/admin/drivers/add" icon={UserPlus} variant="light">
+							إضافة سائق
+						</Button>
+						<Button to="/admin/badges/create" icon={FilePlus2} variant="glass">
+							إنشاء بطاقة
+						</Button>
+					</>
+				}
 			/>
 
-			<div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+			<div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
 				<StatCard
 					label="إجمالي البطاقات"
 					value={value(badges.length)}

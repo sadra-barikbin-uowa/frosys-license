@@ -25,6 +25,7 @@ import ConfirmDialog from "../../components/common/ConfirmDialog";
 import EmptyState from "../../components/common/EmptyState";
 import ErrorState from "../../components/common/ErrorState";
 import LoadingState from "../../components/common/LoadingState";
+import StatusBadge from "../../components/common/StatusBadge";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 import { useAsyncData } from "../../hooks/useAsyncData";
@@ -34,7 +35,6 @@ import { badgeService } from "../../services/badgeService";
 import { formatDate } from "../../utils/formatDate";
 import { vehicleTypeLabel } from "../../data/vehicleTypes";
 import { personTypeLabel } from "../../data/personTypes";
-import { badgeStatusLabel, badgeStatusStyle } from "../../utils/badgeStatus";
 
 const InfoRow = ({ icon: Icon, label, value }) => (
 	<div className="flex items-start gap-3 min-w-0">
@@ -85,7 +85,7 @@ const DriverDetails = ({ role = "employee" }) => {
 	if (error) return <ErrorState onRetry={reload} />;
 	if (!data) {
 		return (
-			<div className="bg-white rounded-xl ring-1 ring-slate-100">
+			<div className="surface">
 				<EmptyState
 					icon={UserX}
 					title="لم يتم العثور على السائق"
@@ -112,33 +112,38 @@ const DriverDetails = ({ role = "employee" }) => {
 			</Link>
 
 			<div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6 items-start">
-				<Card padding="p-6" className="flex flex-col items-center text-center gap-3">
-					<Avatar
-						src={driver.photo}
-						alt={driver.fullName}
-						size="xl"
-						className="ring-4 ring-slate-50"
-					/>
-					<div className="min-w-0 max-w-full">
-						<h1 className="text-base font-bold text-slate-800 wrap-break-word">{driver.fullName}</h1>
-						<p className="text-xs text-slate-500 mt-0.5">{driver.nationalId}</p>
-						{driver.personType && (
-							<span className="inline-block mt-2 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600">
-								{personTypeLabel(driver.personType)}
-							</span>
-						)}
+				<div className="surface overflow-hidden">
+					<div className="h-24 bg-linear-to-br from-indigo-600 via-indigo-500 to-violet-600 relative">
+						<div aria-hidden="true" className="absolute -top-10 -left-8 w-36 h-36 rounded-full bg-white/10" />
 					</div>
-					<div className="flex w-full gap-2">
-						<Button to={`${basePath}/${id}/edit`} variant="secondary" icon={Pencil} className="flex-1">
-							تعديل
-						</Button>
-						{isAdmin && (
-							<Button variant="danger" icon={Trash2} onClick={() => setConfirmDelete(true)}>
-								حذف
+					<div className="relative px-6 pb-6 -mt-12 flex flex-col items-center text-center gap-3">
+						<Avatar
+							src={driver.photo}
+							alt={driver.fullName}
+							size="xl"
+							className="ring-4 ring-white shadow-md"
+						/>
+						<div className="min-w-0 max-w-full">
+							<h1 className="text-base font-bold text-slate-800 wrap-break-word">{driver.fullName}</h1>
+							<p className="text-xs text-slate-500 mt-0.5">{driver.nationalId}</p>
+							{driver.personType && (
+								<span className="inline-block mt-2 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600">
+									{personTypeLabel(driver.personType)}
+								</span>
+							)}
+						</div>
+						<div className="flex w-full gap-2 pt-1">
+							<Button to={`${basePath}/${id}/edit`} variant="secondary" icon={Pencil} className="flex-1">
+								تعديل
 							</Button>
-						)}
+							{isAdmin && (
+								<Button variant="danger" icon={Trash2} onClick={() => setConfirmDelete(true)}>
+									حذف
+								</Button>
+							)}
+						</div>
 					</div>
-				</Card>
+				</div>
 
 				<div className="flex flex-col gap-6 min-w-0">
 					<Card padding="p-5 sm:p-6">
@@ -215,11 +220,7 @@ const DriverDetails = ({ role = "employee" }) => {
 												{badge.badgeNumber}
 											</p>
 											<div className="flex flex-wrap items-center gap-2 mt-1">
-												<span
-													className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${badgeStatusStyle(badge)}`}
-												>
-													{badgeStatusLabel(badge)}
-												</span>
+												<StatusBadge badge={badge} />
 												<span className="text-[11px] text-slate-400">
 													تنتهي: {formatDate(badge.expiryDate)}
 												</span>

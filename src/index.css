@@ -4,6 +4,25 @@
   --font-sans: "Tajawal", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* سطح البطاقة الموحّد: حدّ ناعم + ظل خفيف */
+@utility surface {
+  background-color: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 0 0 1px rgb(226 232 240 / 0.75), 0 1px 3px rgb(15 23 42 / 0.05);
+}
+
+/* بطاقة قابلة للنقر: ترتفع قليلًا وتلوّن حدّها عند المرور */
+@utility surface-link {
+  background-color: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 0 0 1px rgb(226 232 240 / 0.75), 0 1px 3px rgb(15 23 42 / 0.05);
+  transition: box-shadow 0.2s, transform 0.2s;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 0 1px rgb(165 180 252 / 0.7), 0 12px 28px -12px rgb(79 70 229 / 0.28);
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -20,8 +39,25 @@ html, body, #root {
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  background-color: #f4f6f9;
+  background-color: #f3f5fa;
   color: #1e293b;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.01em;
+}
+
+/* رأس الجداول: شريط رمادي فاتح بزوايا مدوّرة */
+thead tr {
+  background-color: rgb(248 250 252 / 0.9);
+}
+thead th:first-child {
+  border-start-start-radius: 0.625rem;
+  border-end-start-radius: 0.625rem;
+}
+thead th:last-child {
+  border-start-end-radius: 0.625rem;
+  border-end-end-radius: 0.625rem;
 }
 
 ::selection {

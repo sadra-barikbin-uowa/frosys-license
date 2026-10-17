@@ -9,7 +9,7 @@ import { User, IdCard, Car as CarIcon } from "lucide-react";
 // نموذج شامل لبيانات السائق + الرخصة + المركبة، يُستخدم في صفحتي
 // إضافة سائق وتعديل سائق. البيانات تُدار بالكامل من الصفحة الأب (Controlled)
 const Section = ({ title, icon: Icon, children }) => (
-	<section className="bg-white rounded-xl ring-1 ring-slate-100 shadow-sm p-4 sm:p-5 flex flex-col gap-4">
+	<section className="surface p-4 sm:p-5 flex flex-col gap-4">
 		<div className="flex items-center gap-2">
 			<div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
 				<Icon size={16} />

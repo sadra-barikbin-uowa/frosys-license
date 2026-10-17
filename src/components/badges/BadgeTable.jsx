@@ -1,24 +1,12 @@
 import { Link } from "react-router-dom";
 import { Eye, Printer, Ban, RotateCcw, Trash2, CreditCard } from "lucide-react";
 import Avatar from "../common/Avatar";
+import StatusBadge from "../common/StatusBadge";
 import Button from "../common/Button";
 import EmptyState from "../common/EmptyState";
 import { formatDate } from "../../utils/formatDate";
-import {
-	BADGE_STATUS,
-	badgeStatusLabel,
-	badgeStatusStyle,
-	computeBadgeStatus,
-} from "../../utils/badgeStatus";
+import { BADGE_STATUS, computeBadgeStatus } from "../../utils/badgeStatus";
 import { vehicleTypeLabel } from "../../data/vehicleTypes";
-
-const StatusPill = ({ badge }) => (
-	<span
-		className={`text-[11px] font-semibold px-2 py-1 rounded-full whitespace-nowrap ${badgeStatusStyle(badge)}`}
-	>
-		{badgeStatusLabel(badge)}
-	</span>
-);
 
 const iconButton = "p-1.5 rounded-md transition-colors";
 
@@ -42,7 +30,7 @@ const BadgeTable = ({
 			<div className="hidden lg:block overflow-x-auto">
 				<table className="w-full text-sm min-w-180">
 					<thead>
-						<tr className="text-right text-xs text-slate-500 border-b border-slate-100">
+						<tr className="text-right text-xs text-slate-500">
 							<th scope="col" className="py-3 px-3 font-medium">السائق</th>
 							<th scope="col" className="py-3 px-3 font-medium">رقم البطاقة</th>
 							<th scope="col" className="py-3 px-3 font-medium">نوع المركبة</th>
@@ -89,7 +77,7 @@ const BadgeTable = ({
 									{formatDate(badge.expiryDate)}
 								</td>
 								<td className="py-3 px-3">
-									<StatusPill badge={badge} />
+									<StatusBadge badge={badge} />
 								</td>
 								<td className="py-3 px-3">
 									<div className="flex items-center gap-1">
@@ -166,7 +154,7 @@ const BadgeTable = ({
 									<p className="text-sm font-bold text-slate-800 truncate">{badge.driverName}</p>
 									<p className="text-xs text-indigo-600 font-medium">{badge.badgeNumber}</p>
 								</div>
-								<StatusPill badge={badge} />
+								<StatusBadge badge={badge} />
 							</div>
 							<dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
 								<div>

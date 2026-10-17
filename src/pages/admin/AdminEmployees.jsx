@@ -41,12 +41,13 @@ const validate = (form, isEditing) => {
 
 const StatusPill = ({ active }) => (
 	<span
-		className={`text-[11px] font-semibold px-2 py-1 rounded-full whitespace-nowrap ${
+		className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${
 			active
 				? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
 				: "bg-slate-100 text-slate-500 ring-1 ring-slate-200"
 		}`}
 	>
+		<span className={`w-1.5 h-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-slate-400"}`} />
 		{active ? "فعال" : "موقوف"}
 	</span>
 );
@@ -275,7 +276,7 @@ const AdminEmployees = () => {
 						<div className="hidden lg:block overflow-x-auto">
 							<table className="w-full text-sm min-w-180">
 								<thead>
-									<tr className="text-right text-xs text-slate-500 border-b border-slate-100">
+									<tr className="text-right text-xs text-slate-500">
 										<th scope="col" className="py-3 px-3 font-medium">الاسم</th>
 										<th scope="col" className="py-3 px-3 font-medium">اسم المستخدم</th>
 										<th scope="col" className="py-3 px-3 font-medium">البريد</th>

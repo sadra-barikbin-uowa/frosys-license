@@ -23,7 +23,7 @@ const BadgeDetails = () => {
 	if (error) return <ErrorState onRetry={reload} />;
 	if (!badge) {
 		return (
-			<div className="bg-white rounded-xl ring-1 ring-slate-100">
+			<div className="surface">
 				<EmptyState
 					icon={CreditCard}
 					title="لم يتم العثور على البطاقة"

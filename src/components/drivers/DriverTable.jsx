@@ -21,7 +21,7 @@ const DriverTable = ({
 			<div className="hidden lg:block overflow-x-auto">
 				<table className="w-full text-sm min-w-170">
 					<thead>
-						<tr className="text-right text-xs text-slate-500 border-b border-slate-100">
+						<tr className="text-right text-xs text-slate-500">
 							<th scope="col" className="py-3 px-3 font-medium">السائق</th>
 							<th scope="col" className="py-3 px-3 font-medium">رقم الهوية</th>
 							<th scope="col" className="py-3 px-3 font-medium">الهاتف</th>

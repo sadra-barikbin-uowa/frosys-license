@@ -10,12 +10,9 @@ import Input from "../common/Input";
 import Select from "../common/Select";
 import ImageUpload from "../common/ImageUpload";
 import Modal from "../common/Modal";
+import StatusBadge from "../common/StatusBadge";
 import { formatDate } from "../../utils/formatDate";
-import {
-	BADGE_STATUS,
-	badgeStatusLabel,
-	badgeStatusStyle,
-} from "../../utils/badgeStatus";
+import { BADGE_STATUS, badgeStatusLabel } from "../../utils/badgeStatus";
 import { VEHICLE_TYPES, vehicleTypeLabel } from "../../data/vehicleTypes";
 import { PERSON_TYPES, personTypeLabel } from "../../data/personTypes";
 import { badgeService } from "../../services/badgeService";
@@ -192,11 +189,7 @@ const BadgeDetailView = ({ badge, backPath, isAdmin = false }) => {
 							</button>
 						))}
 					</div>
-					<span
-						className={`text-xs font-semibold px-3 py-1.5 rounded-full ${badgeStatusStyle(currentBadge)}`}
-					>
-						بطاقة {badgeStatusLabel(currentBadge)}
-					</span>
+					<StatusBadge badge={currentBadge} prefix="بطاقة " size="md" />
 					<p className="text-xs text-slate-500 font-medium" dir="ltr">
 						{currentBadge.badgeNumber}
 					</p>

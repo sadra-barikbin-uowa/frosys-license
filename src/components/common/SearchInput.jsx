@@ -15,7 +15,7 @@ const SearchInput = ({ value, onChange, placeholder = "بحث...", className = "
 				inputMode="search"
 				enterKeyHint="search"
 				autoComplete="off"
-				className="w-full rounded-lg border border-slate-200 bg-white text-sm pr-10 pl-9 py-2.5 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-colors placeholder:text-slate-400"
+				className="w-full rounded-xl border border-slate-200 bg-white text-sm pr-10 pl-9 py-2.5 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-colors placeholder:text-slate-400"
 			/>
 			{value && (
 				<button

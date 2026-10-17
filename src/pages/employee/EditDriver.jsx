@@ -131,7 +131,7 @@ const EditDriver = ({ role = "employee" }) => {
 	if (error) return <ErrorState onRetry={reload} />;
 	if (!loaded) {
 		return (
-			<div className="bg-white rounded-xl ring-1 ring-slate-100">
+			<div className="surface">
 				<EmptyState
 					icon={UserX}
 					title="لم يتم العثور على السائق"

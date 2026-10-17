@@ -30,7 +30,7 @@ const Select = ({
 					aria-invalid={error ? true : undefined}
 					aria-describedby={error ? errorId : undefined}
 					aria-label={!label ? placeholder : undefined}
-					className={`w-full appearance-none rounded-lg border text-sm px-3.5 py-2.5 pl-9 outline-none transition-colors bg-white
+					className={`w-full appearance-none rounded-xl border text-sm px-3.5 py-2.5 pl-9 outline-none transition-colors bg-white
 						${isEmpty && placeholder ? "text-slate-500" : "text-slate-800"}
 						${error ? "border-rose-300 focus:border-rose-500 focus:ring-2 focus:ring-rose-100" : "border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"}
 						${className}`}
