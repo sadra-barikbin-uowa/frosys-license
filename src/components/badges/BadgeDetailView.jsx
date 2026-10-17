@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Printer, ArrowRight, CreditCard, Pencil, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom";
 import BadgePreview from "./BadgePreview";
 import PrintBadge from "./PrintBadge";
 import Button from "../common/Button";
+import Card from "../common/Card";
+import ConfirmDialog from "../common/ConfirmDialog";
 import Input from "../common/Input";
 import Select from "../common/Select";
 import ImageUpload from "../common/ImageUpload";
@@ -15,73 +16,99 @@ import {
 	badgeStatusLabel,
 	badgeStatusStyle,
 } from "../../utils/badgeStatus";
-import { vehicleTypeLabel } from "../../data/vehicleTypes";
-import { badgeService } from "../../services/badgeService";
-import { useToast } from "../../context/ToastContext";
-import { useAuth } from "../../context/AuthContext";
-import { printBadge } from "./PrintBadge";
-import { VEHICLE_TYPES } from "../../data/vehicleTypes";
+import { VEHICLE_TYPES, vehicleTypeLabel } from "../../data/vehicleTypes";
 import { PERSON_TYPES, personTypeLabel } from "../../data/personTypes";
+import { badgeService } from "../../services/badgeService";
+import { useToast } from "../../hooks/useToast";
+import { useAuth } from "../../hooks/useAuth";
+import { printBadge } from "../../utils/print";
+import { getErrorMessage } from "../../utils/errors";
+import { required, validateBadgeDates } from "../../utils/validation";
 
-const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
+const BadgeDetailView = ({ badge, backPath, isAdmin = false }) => {
 	const navigate = useNavigate();
 	const { user } = useAuth();
-	const [searchParams] = useSearchParams();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const { showToast } = useToast();
-	const [currentBadge, setCurrentBadge] = useState(badge);
+	// آخر نسخة محفوظة من البطاقة بعد التعديل (تُتجاهل إذا تغيّرت البطاقة المعروضة)
+	const [saved, setSaved] = useState(null);
+	const currentBadge = saved?.id === badge?.id ? saved : badge;
 	const [editing, setEditing] = useState(false);
 	const [draft, setDraft] = useState(null);
+	const [errors, setErrors] = useState({});
 	const [saving, setSaving] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
 	const [previewSide, setPreviewSide] = useState("front");
 
+	// الرابط ?print=1 يفتح نافذة الطباعة مرة واحدة، ثم نزيل المعامل حتى لا تتكرر الطباعة عند إعادة التحميل
+	const shouldPrint = searchParams.get("print") === "1";
 	useEffect(() => {
-		setCurrentBadge(badge);
-	}, [badge]);
-
-	useEffect(() => {
-		if (searchParams.get("print") === "1" && badge) {
-			const timer = setTimeout(() => printBadge(), 400);
-			return () => clearTimeout(timer);
-		}
-	}, [searchParams, badge]);
+		if (!shouldPrint || !badge) return undefined;
+		const timer = setTimeout(async () => {
+			await printBadge();
+			setSearchParams({}, { replace: true });
+		}, 400);
+		return () => clearTimeout(timer);
+	}, [shouldPrint, badge, setSearchParams]);
 
 	if (!currentBadge) return null;
 
 	const startEditing = () => {
 		setDraft({
 			...currentBadge,
-			photo: currentBadge.photo || currentBadge.driverPhoto || null,
+			driverName: currentBadge.driverName || currentBadge.fullName || "",
+			photo: currentBadge.driverPhoto || currentBadge.photo || null,
+			// الحالة المحسوبة (منتهي/قريب الانتهاء) ليست قيمة يمكن اختيارها؛ المتاح: فعال أو موقوف
+			status:
+				currentBadge.status === BADGE_STATUS.SUSPENDED
+					? BADGE_STATUS.SUSPENDED
+					: BADGE_STATUS.ACTIVE,
 		});
+		setErrors({});
 		setEditing(true);
 	};
 
-	const setDraftValue = (field) => (event) =>
+	const setDraftValue = (field) => (event) => {
 		setDraft((current) => ({ ...current, [field]: event.target.value }));
+		setErrors((current) => ({ ...current, [field]: undefined }));
+	};
 
 	const saveChanges = async () => {
+		const nextErrors = validateBadgeDates(draft.issueDate, draft.expiryDate);
+		if (!required(draft.driverName)) nextErrors.driverName = "اسم السائق مطلوب";
+		if (!required(draft.badgeNumber)) nextErrors.badgeNumber = "رقم البطاقة مطلوب";
+		setErrors(nextErrors);
+		if (Object.keys(nextErrors).length > 0) return;
+
 		setSaving(true);
 		try {
-			const updated = showEmployee
-				? await badgeService.updateBadge(currentBadge.id, {
-						...draft,
-						driverName: draft.driverName || draft.fullName,
-						driverPhoto: draft.photo || null,
-						photo: draft.photo || null,
-					})
-				: await badgeService.updateBadgeForEmployee(currentBadge.id, user.id, {
-						...draft,
-						driverName: draft.driverName || draft.fullName,
-						driverPhoto: draft.photo || null,
-						photo: draft.photo || null,
-					});
+			const payload = {
+				driverName: draft.driverName.trim(),
+				personType: draft.personType,
+				nationalId: draft.nationalId,
+				badgeNumber: draft.badgeNumber.trim(),
+				licenseNumber: draft.licenseNumber,
+				vehicleType: draft.vehicleType,
+				vehicleNumber: draft.vehicleNumber,
+				vehicleModel: draft.vehicleModel,
+				vehicleColor: draft.vehicleColor ?? draft.color,
+				issueDate: draft.issueDate,
+				expiryDate: draft.expiryDate,
+				status: draft.status,
+				driverPhoto: draft.photo || null,
+				// حقل قديم مكرر للصورة: نحذفه حتى لا يطغى على الصورة الجديدة ولا يضاعف حجم التخزين
+				photo: undefined,
+			};
+			const updated = isAdmin
+				? await badgeService.updateBadge(currentBadge.id, payload)
+				: await badgeService.updateBadgeForEmployee(currentBadge.id, user.id, payload);
 			if (!updated) throw new Error("Badge not found or access denied");
-			setCurrentBadge(updated);
+			setSaved(updated);
 			setEditing(false);
 			showToast("تم تحديث البطاقة بنجاح", "success");
 		} catch (error) {
 			console.error(error);
-			showToast("تعذر حفظ تعديلات البطاقة", "error");
+			showToast(getErrorMessage(error, "تعذر حفظ تعديلات البطاقة"), "error");
 		} finally {
 			setSaving(false);
 		}
@@ -90,7 +117,7 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 	const handleDelete = async () => {
 		await badgeService.deleteBadge(currentBadge.id);
 		showToast("تم حذف البطاقة بنجاح", "success");
-		navigate(backPath);
+		navigate(backPath, { replace: true });
 	};
 
 	const rows = [
@@ -98,8 +125,8 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 		["صفة حامل البطاقة", personTypeLabel(currentBadge.personType)],
 		["رقم الهوية", currentBadge.nationalId],
 		["رقم رخصة القيادة", currentBadge.licenseNumber],
-		["نوع المركبة", vehicleTypeLabel(currentBadge.vehicleType)],
-		["رقم المركبة", currentBadge.vehicleNumber],
+		["نوع المركبة", vehicleTypeLabel(currentBadge.vehicleType) || "—"],
+		["رقم المركبة", currentBadge.vehicleNumber || "—"],
 		["موديل المركبة", currentBadge.vehicleModel || "—"],
 		["لون المركبة", currentBadge.vehicleColor || "—"],
 		["تاريخ الإصدار", formatDate(currentBadge.issueDate)],
@@ -107,28 +134,26 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 		["الحالة", badgeStatusLabel(currentBadge)],
 		["تاريخ الانتهاء", formatDate(currentBadge.expiryDate)],
 	];
-	if (showEmployee)
+	if (isAdmin)
 		rows.push([
 			"تم الإنشاء بواسطة",
-			`${currentBadge.createdByName} (${currentBadge.createdBy})`,
+			currentBadge.createdByName
+				? `${currentBadge.createdByName} (${currentBadge.createdBy})`
+				: currentBadge.createdBy || "—",
 		]);
 
 	return (
 		<div>
-			<div className="flex items-center justify-between mb-6 no-print">
+			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
 				<Link
 					to={backPath}
-					className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+					className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 self-start sm:self-auto"
 				>
 					<ArrowRight size={16} /> رجوع
 				</Link>
-				<div className="flex items-center gap-2">
-					{showEmployee && (
-						<Button
-							icon={Trash2}
-							variant="danger"
-							onClick={() => setConfirmDelete(true)}
-						>
+				<div className="flex flex-wrap items-center gap-2">
+					{isAdmin && (
+						<Button icon={Trash2} variant="danger" onClick={() => setConfirmDelete(true)}>
 							حذف
 						</Button>
 					)}
@@ -141,13 +166,13 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 				</div>
 			</div>
 
-			<div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
-				<div className="bg-white rounded-xl ring-1 ring-slate-100 shadow-sm p-6 flex flex-col items-center gap-4">
-					<div className="screen-badge-preview">
-						<BadgePreview data={currentBadge} side={previewSide} />
+			<div className="grid grid-cols-1 lg:grid-cols-[minmax(0,380px)_1fr] gap-6 items-start">
+				<Card padding="p-5 sm:p-6" className="flex flex-col items-center gap-4 min-w-0">
+					<div className="w-full">
+						<BadgePreview data={currentBadge} side={previewSide} fit />
 					</div>
 					<div
-						className="flex gap-1 rounded-lg bg-slate-100 p-1 no-print"
+						className="flex gap-1 rounded-lg bg-slate-100 p-1"
 						role="tablist"
 						aria-label="وجه البطاقة"
 					>
@@ -172,27 +197,27 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 					>
 						بطاقة {badgeStatusLabel(currentBadge)}
 					</span>
-					<p className="text-xs text-slate-400 font-medium">
+					<p className="text-xs text-slate-500 font-medium" dir="ltr">
 						{currentBadge.badgeNumber}
 					</p>
-				</div>
+				</Card>
 
-				<div className="bg-white rounded-xl ring-1 ring-slate-100 shadow-sm p-6">
+				<Card padding="p-5 sm:p-6">
 					<div className="flex items-center gap-2 mb-5">
 						<div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
 							<CreditCard size={16} />
 						</div>
-						<h3 className="text-sm font-bold text-slate-800">تفاصيل البطاقة</h3>
+						<h2 className="text-sm font-bold text-slate-800">تفاصيل البطاقة</h2>
 					</div>
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+					<dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
 						{rows.map(([label, value]) => (
-							<div key={label}>
-								<p className="text-xs text-slate-400 mb-0.5">{label}</p>
-								<p className="text-sm font-medium text-slate-700">{value}</p>
+							<div key={label} className="min-w-0">
+								<dt className="text-xs text-slate-400 mb-0.5">{label}</dt>
+								<dd className="text-sm font-medium text-slate-700 wrap-break-word">{value || "—"}</dd>
 							</div>
 						))}
-					</div>
-				</div>
+					</dl>
+				</Card>
 			</div>
 
 			<PrintBadge data={currentBadge} />
@@ -202,9 +227,10 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 				onClose={() => setEditing(false)}
 				title="تعديل بيانات البطاقة"
 				size="xl"
+				dismissible={!saving}
 				footer={
 					<>
-						<Button variant="secondary" onClick={() => setEditing(false)}>
+						<Button variant="secondary" onClick={() => setEditing(false)} disabled={saving}>
 							إلغاء
 						</Button>
 						<Button loading={saving} onClick={saveChanges}>
@@ -216,50 +242,48 @@ const BadgeDetailView = ({ badge, backPath, showEmployee = false }) => {
 				{draft && (
 					<EditBadgeForm
 						data={draft}
+						errors={errors}
 						onChange={(field, value) =>
-							setDraft((current) => ({ ...current, [field]: value }))
+							setDraft((current) => ({
+								...current,
+								[field]: value,
+								// الصورة تُقرأ من driverPhoto في البطاقة، فنزامنها لتتحدث المعاينة عند الإزالة أيضًا
+								...(field === "photo" ? { driverPhoto: value } : {}),
+							}))
 						}
 						setDraftValue={setDraftValue}
 					/>
 				)}
 			</Modal>
 
-			<Modal
+			<ConfirmDialog
 				open={confirmDelete}
 				onClose={() => setConfirmDelete(false)}
 				title="حذف البطاقة"
-				footer={
-					<>
-						<Button variant="secondary" onClick={() => setConfirmDelete(false)}>
-							إلغاء
-						</Button>
-						<Button variant="danger" onClick={handleDelete}>
-							حذف
-						</Button>
-					</>
-				}
-			>
-				<p className="text-sm text-slate-600">
-					هل أنت متأكد من حذف هذه البيانات؟ لا يمكن التراجع عن هذا الإجراء.
-				</p>
-			</Modal>
+				message="هل أنت متأكد من حذف هذه البطاقة؟ لا يمكن التراجع عن هذا الإجراء."
+				confirmLabel="حذف"
+				onConfirm={handleDelete}
+			/>
 		</div>
 	);
 };
 
-const EditBadgeForm = ({ data, onChange, setDraftValue }) => (
-	<div className="grid grid-cols-1 lg:grid-cols-[1fr_342px] gap-6 items-start">
-		<div className="flex flex-col gap-5">
+const EditBadgeForm = ({ data, errors, onChange, setDraftValue }) => (
+	<div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_342px] gap-6 items-start">
+		<div className="flex flex-col gap-5 min-w-0">
 			<ImageUpload
 				label="صورة السائق"
-				value={data.photo || data.driverPhoto}
+				value={data.photo}
 				onChange={(value) => onChange("photo", value)}
+				maxSize={480}
 			/>
 			<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 				<Input
 					label="اسم السائق"
-					value={data.driverName || data.fullName || ""}
+					required
+					value={data.driverName || ""}
 					onChange={setDraftValue("driverName")}
+					error={errors.driverName}
 				/>
 				<Select
 					label="صفة حامل البطاقة"
@@ -274,8 +298,10 @@ const EditBadgeForm = ({ data, onChange, setDraftValue }) => (
 				/>
 				<Input
 					label="رقم البطاقة"
+					required
 					value={data.badgeNumber || ""}
 					onChange={setDraftValue("badgeNumber")}
+					error={errors.badgeNumber}
 				/>
 				<Input
 					label="رقم إجازة السوق"
@@ -306,14 +332,18 @@ const EditBadgeForm = ({ data, onChange, setDraftValue }) => (
 				<Input
 					label="تاريخ الإصدار"
 					type="date"
+					required
 					value={data.issueDate || ""}
 					onChange={setDraftValue("issueDate")}
+					error={errors.issueDate}
 				/>
 				<Input
 					label="تاريخ الانتهاء"
 					type="date"
+					required
 					value={data.expiryDate || ""}
 					onChange={setDraftValue("expiryDate")}
+					error={errors.expiryDate}
 				/>
 				<Select
 					label="حالة البطاقة"
@@ -326,9 +356,9 @@ const EditBadgeForm = ({ data, onChange, setDraftValue }) => (
 				/>
 			</div>
 		</div>
-		<div className="lg:sticky lg:top-0 flex flex-col items-center gap-2">
+		<div className="lg:sticky lg:top-0 flex flex-col items-center gap-2 min-w-0 w-full">
 			<p className="text-xs font-semibold text-slate-500">معاينة مباشرة</p>
-			<BadgePreview data={data} />
+			<BadgePreview data={data} id="badge-edit-preview" fit />
 		</div>
 	</div>
 );

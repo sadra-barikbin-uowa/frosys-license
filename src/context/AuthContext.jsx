@@ -1,38 +1,46 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { authService } from "../services/authService";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { authService, CURRENT_USER_KEY } from "../services/authService";
+import { AuthContext } from "./contexts";
 
-const AuthContext = createContext(null);
+const sameUser = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+	const [user, setUser] = useState(() => authService.getCurrentUser());
 
-  useEffect(() => {
-    const current = authService.getCurrentUser();
-    setUser(current);
-    setLoading(false);
-  }, []);
+	// مزامنة الجلسة بين التبويبات: تسجيل الخروج أو إيقاف الحساب ينعكس في كل التبويبات
+	useEffect(() => {
+		const handleStorage = (event) => {
+			if (event.key === null || event.key === CURRENT_USER_KEY || event.key === "users")
+				setUser(authService.getCurrentUser());
+		};
+		window.addEventListener("storage", handleStorage);
+		return () => window.removeEventListener("storage", handleStorage);
+	}, []);
 
-  const login = async (username, password) => {
-    const loggedInUser = await authService.login(username, password);
-    setUser(loggedInUser);
-    return loggedInUser;
-  };
+	const login = useCallback(async (username, password) => {
+		const loggedInUser = await authService.login(username, password);
+		setUser(loggedInUser);
+		return loggedInUser;
+	}, []);
 
-  const logout = async () => {
-    await authService.logout();
-    setUser(null);
-  };
+	const logout = useCallback(async () => {
+		await authService.logout();
+		setUser(null);
+	}, []);
 
-  return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAdmin: user?.role === "admin" }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+	// يعيد التحقق من الحساب (يُستدعى عند التنقل) فيُخرج المستخدم إن حُذف حسابه أو أُوقف
+	const revalidate = useCallback(() => {
+		setUser((current) => {
+			if (!current) return current;
+			const fresh = authService.getCurrentUser();
+			return fresh && sameUser(fresh, current) ? current : fresh;
+		});
+	}, []);
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth يجب أن يُستخدم داخل AuthProvider");
-  return ctx;
+	const value = useMemo(
+		() => ({ user, login, logout, revalidate, isAdmin: user?.role === "admin" }),
+		[user, login, logout, revalidate],
+	);
+
+	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

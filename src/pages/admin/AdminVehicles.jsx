@@ -1,52 +1,72 @@
-import { useEffect, useState } from "react";
-import DashboardLayout from "../../components/layout/DashboardLayout";
+import { useDeferredValue, useMemo, useState } from "react";
+import PageHeader from "../../components/common/PageHeader";
+import Card from "../../components/common/Card";
 import SearchInput from "../../components/common/SearchInput";
 import Select from "../../components/common/Select";
+import ErrorState from "../../components/common/ErrorState";
+import LoadingState from "../../components/common/LoadingState";
 import VehicleTable from "../../components/vehicles/VehicleTable";
+import { useAsyncData } from "../../hooks/useAsyncData";
 import { vehicleService } from "../../services/vehicleService";
 import { VEHICLE_TYPES } from "../../data/vehicleTypes";
+import { matchesQuery } from "../../utils/search";
 
 const vehicleOptions = VEHICLE_TYPES.map((v) => ({ value: v.value, label: v.label }));
 
 const AdminVehicles = () => {
-  const [vehicles, setVehicles] = useState([]);
-  const [query, setQuery] = useState("");
-  const [type, setType] = useState("");
-  const [loading, setLoading] = useState(true);
+	const [query, setQuery] = useState("");
+	const deferredQuery = useDeferredValue(query);
+	const [type, setType] = useState("");
+	const {
+		data: vehicles,
+		loading,
+		error,
+		reload,
+	} = useAsyncData(() => vehicleService.getVehicles(), [], []);
 
-  useEffect(() => {
-    vehicleService.getVehicles().then((data) => {
-      setVehicles(data);
-      setLoading(false);
-    });
-  }, []);
+	const filtered = useMemo(
+		() =>
+			vehicles.filter(
+				(v) =>
+					matchesQuery(deferredQuery, v.vehicleNumber, v.model, v.color) &&
+					(!type || v.vehicleType === type),
+			),
+		[vehicles, deferredQuery, type],
+	);
 
-  const filtered = vehicles.filter((v) => {
-    const matchesQuery = v.vehicleNumber.includes(query) || (v.model || "").includes(query);
-    const matchesType = !type || v.vehicleType === type;
-    return matchesQuery && matchesType;
-  });
+	return (
+		<>
+			<PageHeader title="المركبات" description="جميع المركبات المسجّلة في النظام" />
 
-  return (
-    <DashboardLayout role="admin">
-      <div className="mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-800">المركبات</h1>
-        <p className="text-sm text-slate-400 mt-1">جميع المركبات المسجّلة في النظام</p>
-      </div>
-
-      <div className="bg-white rounded-xl ring-1 ring-slate-100 shadow-sm p-5">
-        <div className="flex flex-col sm:flex-row gap-3 mb-5">
-          <SearchInput value={query} onChange={setQuery} placeholder="ابحث برقم المركبة أو الموديل..." className="max-w-sm" />
-          <Select value={type} onChange={(e) => setType(e.target.value)} options={vehicleOptions} placeholder="نوع المركبة" className="max-w-[180px]" />
-        </div>
-        {loading ? (
-          <p className="text-sm text-slate-400 py-10 text-center">جارِ التحميل...</p>
-        ) : (
-          <VehicleTable vehicles={filtered} />
-        )}
-      </div>
-    </DashboardLayout>
-  );
+			<Card>
+				<div className="flex flex-col sm:flex-row gap-3 mb-5">
+					<SearchInput
+						value={query}
+						onChange={setQuery}
+						placeholder="ابحث برقم المركبة أو الموديل..."
+						className="sm:flex-1 sm:max-w-sm"
+					/>
+					<Select
+						value={type}
+						onChange={(e) => setType(e.target.value)}
+						options={vehicleOptions}
+						placeholder="نوع المركبة"
+						className="sm:w-48"
+					/>
+				</div>
+				{loading ? (
+					<LoadingState />
+				) : error ? (
+					<ErrorState onRetry={reload} />
+				) : (
+					<VehicleTable
+						vehicles={filtered}
+						emptyText={query || type ? "لا توجد مركبات مطابقة" : "لا توجد مركبات مسجلة"}
+					/>
+				)}
+			</Card>
+		</>
+	);
 };
 
 export default AdminVehicles;

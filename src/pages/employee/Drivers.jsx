@@ -1,55 +1,69 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useDeferredValue, useMemo, useState } from "react";
 import { UserPlus } from "lucide-react";
-import DashboardLayout from "../../components/layout/DashboardLayout";
 import SearchInput from "../../components/common/SearchInput";
 import Button from "../../components/common/Button";
+import Card from "../../components/common/Card";
+import ErrorState from "../../components/common/ErrorState";
+import LoadingState from "../../components/common/LoadingState";
+import PageHeader from "../../components/common/PageHeader";
 import DriverTable from "../../components/drivers/DriverTable";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
+import { useAsyncData } from "../../hooks/useAsyncData";
 import { driverService } from "../../services/driverService";
+import { matchesQuery } from "../../utils/search";
 
 const Drivers = () => {
-  const { user } = useAuth();
-  const [drivers, setDrivers] = useState([]);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
+	const { user } = useAuth();
+	const [query, setQuery] = useState("");
+	const deferredQuery = useDeferredValue(query);
+	const {
+		data: drivers,
+		loading,
+		error,
+		reload,
+	} = useAsyncData(() => driverService.getDriversByEmployee(user.id), [user.id], []);
 
-  useEffect(() => {
-    driverService.getDriversByEmployee(user.id).then((data) => {
-      setDrivers(data);
-      setLoading(false);
-    });
-  }, [user.id]);
+	const filtered = useMemo(
+		() =>
+			drivers.filter((d) =>
+				matchesQuery(deferredQuery, d.fullName, d.nationalId, d.phone, d.licenseNumber),
+			),
+		[drivers, deferredQuery],
+	);
 
-  const filtered = drivers.filter(
-    (d) =>
-      d.fullName.includes(query) ||
-      d.nationalId.includes(query) ||
-      d.phone.includes(query)
-  );
+	return (
+		<>
+			<PageHeader
+				title="السائقون"
+				description="قائمة السائقين الذين قمت بإضافتهم"
+				actions={
+					<Button to="/employee/drivers/add" icon={UserPlus}>
+						إضافة سائق
+					</Button>
+				}
+			/>
 
-  return (
-    <DashboardLayout role="employee">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-800">السائقون</h1>
-          <p className="text-sm text-slate-400 mt-1">قائمة السائقين الذين قمت بإضافتهم</p>
-        </div>
-        <Link to="/employee/drivers/add">
-          <Button icon={UserPlus}>إضافة سائق</Button>
-        </Link>
-      </div>
-
-      <div className="bg-white rounded-xl ring-1 ring-slate-100 shadow-sm p-5">
-        <SearchInput value={query} onChange={setQuery} placeholder="ابحث بالاسم أو رقم الهوية أو الهاتف..." className="max-w-sm mb-5" />
-        {loading ? (
-          <p className="text-sm text-slate-400 py-10 text-center">جارِ التحميل...</p>
-        ) : (
-          <DriverTable drivers={filtered} basePath="/employee/drivers" />
-        )}
-      </div>
-    </DashboardLayout>
-  );
+			<Card>
+				<SearchInput
+					value={query}
+					onChange={setQuery}
+					placeholder="ابحث بالاسم أو رقم الهوية أو الهاتف..."
+					className="max-w-sm mb-5"
+				/>
+				{loading ? (
+					<LoadingState />
+				) : error ? (
+					<ErrorState onRetry={reload} />
+				) : (
+					<DriverTable
+						drivers={filtered}
+						basePath="/employee/drivers"
+						emptyText={query ? "لا يوجد سائقون مطابقون للبحث" : "لم تقم بإضافة أي سائق بعد"}
+					/>
+				)}
+			</Card>
+		</>
+	);
 };
 
 export default Drivers;

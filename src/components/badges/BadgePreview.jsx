@@ -1,5 +1,6 @@
 import { ShieldCheck, User } from "lucide-react";
-import { useSettings } from "../../context/SettingsContext";
+import { useSettings } from "../../hooks/useSettings";
+import ScaledBadge, { BADGE_HEIGHT, BADGE_WIDTH } from "./ScaledBadge";
 import { formatDate } from "../../utils/formatDate";
 import {
 	badgeStatusLabel,
@@ -10,7 +11,7 @@ import { vehicleTypeLabel } from "../../data/vehicleTypes";
 import { personTypeLabel } from "../../data/personTypes";
 
 // البطاقة بنسبة ID Card حقيقية 85.6mm x 54mm (1.586 : 1)
-// معروضة هنا بحجم مكبّر مناسب للشاشة، لكن بنفس النسبة تمامًا لضمان طباعة دقيقة
+// معروضة هنا بحجم 342×216 بكسل، وتُصغَّر تلقائيًا على الشاشات الضيقة (خاصية fit)
 const STATUS_DOT = {
 	[BADGE_STATUS.ACTIVE]: "bg-emerald-400",
 	[BADGE_STATUS.EXPIRED]: "bg-rose-400",
@@ -18,103 +19,130 @@ const STATUS_DOT = {
 	[BADGE_STATUS.SUSPENDED]: "bg-slate-400",
 };
 
-const BadgePreview = ({ data, id = "badge-preview", side = "front" }) => {
-	const { settings } = useSettings();
+const DEFAULT_COLOR = "#4338ca";
+
+const headerBackground = (color) =>
+	`linear-gradient(115deg, ${color}, color-mix(in srgb, ${color} 72%, #101828))`;
+
+const LogoMark = ({ logo, size }) => (
+	<div
+		className="rounded-md bg-white/15 flex items-center justify-center shrink-0 overflow-hidden"
+		style={{ width: size, height: size }}
+	>
+		{logo ? (
+			<img
+				src={logo}
+				alt="شعار المؤسسة"
+				className="w-full h-full object-contain bg-white p-0.5"
+			/>
+		) : (
+			<ShieldCheck size={size * 0.6} className="text-white" />
+		)}
+	</div>
+);
+
+const InfoCell = ({ label, value }) => (
+	<div className="leading-tight min-w-0">
+		<p className="text-[7px] text-slate-400">{label}</p>
+		<p className="text-[9px] font-semibold text-slate-700 truncate">{value}</p>
+	</div>
+);
+
+const BadgeFront = ({ data, id, settings }) => {
 	const status = computeBadgeStatus(data);
 	const photo = data.photo || data.driverPhoto;
-	if (side === "back")
-		return <BadgeBack data={data} id={id} settings={settings} />;
-	const cardColor = settings.badgeColor || "#4338ca";
+	const accent = settings.badgeColor || DEFAULT_COLOR;
 
 	return (
 		<div
 			id={id}
 			className="relative overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200 mx-auto select-none badge-face"
-			style={{ width: "342px", aspectRatio: "1.586 / 1" }}
+			style={{ width: BADGE_WIDTH, height: BADGE_HEIGHT }}
 			dir="rtl"
 		>
+			{/* علامة مائية خفيفة */}
+			<div
+				aria-hidden="true"
+				className="pointer-events-none absolute inset-0 flex items-center justify-center -rotate-12 text-[22px] font-black whitespace-nowrap opacity-[0.04]"
+				style={{ color: accent }}
+			>
+				{settings.systemName}
+			</div>
+
 			{/* شريط علوي */}
 			<div
-				className="relative px-4 pt-3 pb-8 text-white"
-				style={{
-					background: `linear-gradient(115deg, ${cardColor}, color-mix(in srgb, ${cardColor} 72%, #101828))`,
-				}}
+				className="absolute inset-x-0 top-0 h-[52px] px-3.5 pt-2.5 flex items-start justify-between text-white overflow-hidden"
+				style={{ background: headerBackground(accent) }}
 			>
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-2">
-						<div className="w-7 h-7 rounded-md bg-white/15 flex items-center justify-center backdrop-blur-sm">
-							{settings.logo ? (
-								<img
-									src={settings.logo}
-									alt="شعار المؤسسة"
-									className="h-7 w-7 rounded-md object-contain bg-white p-0.5"
-								/>
-							) : (
-								<ShieldCheck size={16} className="text-white" />
-							)}
-						</div>
-						<div>
-							<p className="text-[9px] font-bold text-white leading-tight">
-								{settings.systemName}
-							</p>
-							<p className="text-[8px] text-indigo-100 leading-tight">
-								DRIVER FLEET ID
-							</p>
-						</div>
-					</div>
-					<div className="text-left">
-						<p className="text-[9px] font-bold text-white">بطاقة تعريف سائق</p>
-						<p className="text-[7px] text-indigo-100 tracking-wide">
-							DRIVER ID CARD
+				<div className="flex items-center gap-2 min-w-0">
+					<LogoMark logo={settings.logo} size={28} />
+					<div className="min-w-0">
+						<p className="text-[9px] font-bold leading-tight truncate max-w-[130px]">
+							{settings.systemName}
+						</p>
+						<p
+							className="text-[7px] leading-tight opacity-80 tracking-wide"
+							dir="ltr"
+						>
+							DRIVER FLEET ID
 						</p>
 					</div>
+				</div>
+				<div className="text-left shrink-0">
+					<p className="text-[9px] font-bold leading-tight">بطاقة تعريف سائق</p>
+					<p
+						className="text-[7px] leading-tight opacity-80 tracking-wide"
+						dir="ltr"
+					>
+						DRIVER ID CARD
+					</p>
 				</div>
 				<div className="absolute -bottom-6 -left-6 w-20 h-20 rounded-full border border-white/15" />
 				<div className="absolute -bottom-10 left-10 w-16 h-16 rotate-45 border border-white/10" />
 			</div>
 
-			{/* المحتوى */}
-			<div className="relative -mt-6 px-4 flex gap-3">
-				<div className="w-[68px] h-[82px] rounded-lg overflow-hidden ring-4 ring-white bg-slate-100 shrink-0 shadow-md">
-					{photo ? (
-						<img
-							src={photo}
-							alt="صورة السائق"
-							className="w-full h-full object-cover"
-						/>
-					) : (
-						<div className="w-full h-full flex items-center justify-center text-slate-300">
-							<User size={28} />
-						</div>
-					)}
-				</div>
-
-				<div className="flex-1 min-w-0 pt-6">
-					<p className="text-[12px] font-bold text-slate-800 truncate">
-						{data.driverName || data.fullName || "اسم السائق الثلاثي"}
-					</p>
-					<p className="mt-0.5 text-[8px] font-semibold text-indigo-700">
-						{personTypeLabel(data.personType)}
-					</p>
-					<div className="mt-1 grid grid-cols-1 gap-0.5">
-						<p className="text-[8px] text-slate-500">
-							رقم الهوية:{" "}
-							<span className="font-semibold text-slate-700">
-								{data.nationalId || "—"}
-							</span>
-						</p>
-						<p className="text-[8px] text-slate-500">
-							رقم البطاقة:{" "}
-							<span className="font-semibold text-indigo-600">
-								{data.badgeNumber || "سيتم توليده تلقائيًا"}
-							</span>
-						</p>
+			{/* الصورة */}
+			<div className="absolute right-3.5 top-[34px] w-[66px] h-[80px] rounded-lg overflow-hidden ring-[3px] ring-white bg-slate-100 shadow-md">
+				{photo ? (
+					<img
+						src={photo}
+						alt="صورة السائق"
+						className="w-full h-full object-cover"
+					/>
+				) : (
+					<div className="w-full h-full flex items-center justify-center text-slate-300">
+						<User size={28} />
 					</div>
-				</div>
+				)}
+			</div>
+
+			{/* بيانات حامل البطاقة */}
+			<div className="absolute top-[58px] right-[92px] left-3.5">
+				<p className="text-[12px] font-bold text-slate-800 truncate leading-tight">
+					{data.driverName || data.fullName || "اسم السائق الثلاثي"}
+				</p>
+				<p
+					className="mt-0.5 text-[8px] font-semibold"
+					style={{ color: accent }}
+				>
+					{personTypeLabel(data.personType)}
+				</p>
+				<p className="mt-1 text-[8px] text-slate-500 leading-snug truncate">
+					رقم الهوية:{" "}
+					<span className="font-semibold text-slate-700">
+						{data.nationalId || "—"}
+					</span>
+				</p>
+				<p className="text-[8px] text-slate-500 leading-snug truncate">
+					رقم البطاقة:{" "}
+					<span className="font-semibold" style={{ color: accent }}>
+						{data.badgeNumber || "سيتم توليده تلقائيًا"}
+					</span>
+				</p>
 			</div>
 
 			{/* معلومات المركبة */}
-			<div className="px-4 mt-2 grid grid-cols-2 gap-x-2 gap-y-1">
+			<div className="absolute inset-x-3.5 top-[122px] grid grid-cols-3 gap-x-2 gap-y-1.5">
 				<InfoCell
 					label="نوع المركبة"
 					value={data.vehicleType ? vehicleTypeLabel(data.vehicleType) : "—"}
@@ -131,13 +159,9 @@ const BadgePreview = ({ data, id = "badge-preview", side = "front" }) => {
 				/>
 			</div>
 
-			<div className="pointer-events-none absolute right-24 top-20 -rotate-12 text-[18px] font-black text-indigo-900/[0.035]">
-				{settings.organizationName}
-			</div>
-
-			{/* الأسفل: التواريخ والحالة */}
-			<div className="absolute bottom-0 inset-x-0 px-4 py-2.5 flex items-end justify-between bg-slate-50 border-t border-slate-100">
-				<div className="flex flex-col gap-1">
+			{/* الأسفل: الحالة والتواريخ والتوقيع */}
+			<div className="absolute bottom-0 inset-x-0 h-[42px] px-3.5 flex items-center justify-between bg-slate-50 border-t border-slate-100">
+				<div>
 					<div className="flex items-center gap-1.5">
 						<span
 							className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[status]}`}
@@ -146,16 +170,14 @@ const BadgePreview = ({ data, id = "badge-preview", side = "front" }) => {
 							بطاقة {badgeStatusLabel(data)}
 						</span>
 					</div>
-					<p className="text-[7px] text-slate-500">
-						إصدار: {formatDate(data.issueDate)}
-					</p>
-					<p className="text-[7px] text-slate-500">
-						انتهاء: {formatDate(data.expiryDate)}
+					<p className="mt-0.5 text-[7px] text-slate-500">
+						إصدار: {formatDate(data.issueDate)} &nbsp;•&nbsp; انتهاء:{" "}
+						{formatDate(data.expiryDate)}
 					</p>
 				</div>
-				<div className="text-center min-w-[70px]">
-					<p className="text-[7px] text-slate-400">توقيع المدير</p>
-					<div className="mt-2 border-b border-slate-400 w-[70px]" />
+				<div className="text-center">
+					<div className="w-[70px] h-3 border-b border-slate-400" />
+					<p className="mt-0.5 text-[7px] text-slate-400">توقيع المدير</p>
 				</div>
 			</div>
 		</div>
@@ -163,18 +185,18 @@ const BadgePreview = ({ data, id = "badge-preview", side = "front" }) => {
 };
 
 const BadgeBack = ({ id, data, settings }) => {
+	const accent = settings.badgeColor || DEFAULT_COLOR;
+
 	return (
 		<div
 			id={id}
 			className="relative overflow-hidden rounded-2xl bg-slate-50 shadow-xl ring-1 ring-slate-200 mx-auto select-none badge-face"
-			style={{ width: "342px", aspectRatio: "1.586 / 1" }}
+			style={{ width: BADGE_WIDTH, height: BADGE_HEIGHT }}
 			dir="rtl"
 		>
 			<div
 				className="relative px-4 py-3 text-white"
-				style={{
-					background: `linear-gradient(115deg, ${settings.badgeColor || "#4338ca"}, color-mix(in srgb, ${settings.badgeColor || "#4338ca"} 72%, #101828))`,
-				}}
+				style={{ background: headerBackground(accent) }}
 			>
 				<div className="flex items-center gap-2">
 					{settings.logo && (
@@ -184,39 +206,61 @@ const BadgeBack = ({ id, data, settings }) => {
 							className="h-6 w-6 rounded object-contain bg-white p-0.5"
 						/>
 					)}
-					<p className="text-[10px] font-bold">{settings.systemName}</p>
+					<p className="text-[10px] font-bold truncate">
+						{settings.systemName}
+					</p>
 				</div>
-				<p className="text-[7px] text-indigo-100">INSTRUCTIONS / GUIDELINES</p>
+				{/* <p className="text-[7px] opacity-80" dir="ltr">
+					INSTRUCTIONS / GUIDELINES
+				</p> */}
 			</div>
 			<div className="p-4">
-				<div className="relative rounded-xl border border-slate-200 bg-white/90 p-3 shadow-sm">
-					<p className="absolute left-4 top-5 -rotate-12 text-[16px] font-black text-indigo-900/[0.06]">
-						{settings.organizationName}
+				<div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white/90 p-3 shadow-sm">
+					<p
+						aria-hidden="true"
+						className="absolute left-4 top-5 -rotate-12 text-[16px] font-black whitespace-nowrap opacity-[0.06]"
+						style={{ color: accent }}
+					>
+						{settings.systemName}
 					</p>
 					<p className="text-[9px] font-bold text-slate-800">
 						تعليمات الاستخدام
 					</p>
-					<ul className="mt-2 space-y-1.5 pr-4 text-[7px] leading-5 text-slate-600 list-disc">
+					<ul className="mt-2 space-y-1 pr-4 text-[7px] leading-[1.35] text-slate-600 list-disc">
 						<li>يرجى إبقاء البطاقة داخل المركبة أثناء الحركة.</li>
 						<li>يجب إظهار البطاقة عند الدخول والخروج من الموقع.</li>
 						<li>استخدم البطاقة فقط لصاحبها وعدم إعارتها لأي شخص.</li>
 						<li>في حال فقدان أو تلف البطاقة، تواصل مع الإدارة فورًا.</li>
 					</ul>
 				</div>
-				<div className="mt-2 flex items-center justify-between text-[7px] text-slate-500">
+				<div className="mt-2 flex items-center justify-between gap-2 text-[7px] text-slate-500">
 					<span>رقم البطاقة: {data.badgeNumber || "—"}</span>
-					<span>{settings.contactInfo}</span>
+					<span className="truncate">{settings.contactInfo}</span>
 				</div>
 			</div>
 		</div>
 	);
 };
 
-const InfoCell = ({ label, value }) => (
-	<div className="leading-tight">
-		<p className="text-[7px] text-slate-400">{label}</p>
-		<p className="text-[9px] font-semibold text-slate-700 truncate">{value}</p>
-	</div>
-);
+// `fit`: تصغير تلقائي ليناسب عرض الحاوية (للعرض على الشاشة). في الطباعة نتركه false.
+// `settings`: لعرض إعدادات مختلفة عن المحفوظة (معاينة مباشرة في صفحة الإعدادات).
+const BadgePreview = ({
+	data,
+	id = "badge-preview",
+	side = "front",
+	fit = false,
+	settings,
+}) => {
+	const { settings: savedSettings } = useSettings();
+	const effective = { ...savedSettings, ...settings };
+	const face =
+		side === "back" ? (
+			<BadgeBack data={data} id={id} settings={effective} />
+		) : (
+			<BadgeFront data={data} id={id} settings={effective} />
+		);
+
+	return fit ? <ScaledBadge>{face}</ScaledBadge> : face;
+};
 
 export default BadgePreview;

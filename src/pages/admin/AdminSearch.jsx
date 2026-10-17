@@ -1,90 +1,119 @@
-import { useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { Search as SearchIcon, User, CreditCard, Car } from "lucide-react";
-import DashboardLayout from "../../components/layout/DashboardLayout";
+import PageHeader from "../../components/common/PageHeader";
+import Card from "../../components/common/Card";
 import SearchInput from "../../components/common/SearchInput";
+import ErrorState from "../../components/common/ErrorState";
+import LoadingState from "../../components/common/LoadingState";
 import DriverTable from "../../components/drivers/DriverTable";
 import BadgeTable from "../../components/badges/BadgeTable";
 import VehicleTable from "../../components/vehicles/VehicleTable";
+import { useAsyncData } from "../../hooks/useAsyncData";
 import { driverService } from "../../services/driverService";
 import { badgeService } from "../../services/badgeService";
 import { vehicleService } from "../../services/vehicleService";
+import { matchesQuery } from "../../utils/search";
+
+const EMPTY = { drivers: [], badges: [], vehicles: [] };
+
+const Section = ({ icon: Icon, title, count, children }) => (
+	<section>
+		<div className="flex items-center gap-2 mb-3">
+			<Icon size={16} className="text-indigo-500" />
+			<h2 className="text-sm font-bold text-slate-800">
+				{title} ({count})
+			</h2>
+		</div>
+		<Card>{children}</Card>
+	</section>
+);
 
 const AdminSearch = () => {
-  const [query, setQuery] = useState("");
-  const [drivers, setDrivers] = useState([]);
-  const [badges, setBadges] = useState([]);
-  const [vehicles, setVehicles] = useState([]);
-  const [searched, setSearched] = useState(false);
+	const [query, setQuery] = useState("");
+	const deferredQuery = useDeferredValue(query);
+	const { data, loading, error, reload } = useAsyncData(
+		async () => {
+			const [drivers, badges, vehicles] = await Promise.all([
+				driverService.getDrivers(),
+				badgeService.getBadges(),
+				vehicleService.getVehicles(),
+			]);
+			return { drivers, badges, vehicles };
+		},
+		[],
+		EMPTY,
+	);
 
-  const runSearch = async (value) => {
-    setQuery(value);
-    if (!value.trim()) {
-      setSearched(false);
-      return;
-    }
-    const [allDrivers, allBadges, allVehicles] = await Promise.all([
-      driverService.getDrivers(),
-      badgeService.getBadges(),
-      vehicleService.getVehicles(),
-    ]);
-    setDrivers(allDrivers.filter((d) => d.fullName.includes(value) || d.nationalId.includes(value) || d.phone.includes(value)));
-    setBadges(allBadges.filter((b) => b.driverName.includes(value) || b.badgeNumber.includes(value) || (b.vehicleNumber || "").includes(value)));
-    setVehicles(allVehicles.filter((v) => v.vehicleNumber.includes(value) || (v.model || "").includes(value)));
-    setSearched(true);
-  };
+	const searched = deferredQuery.trim().length > 0;
+	const results = useMemo(() => {
+		if (!searched) return EMPTY;
+		return {
+			drivers: data.drivers.filter((d) =>
+				matchesQuery(deferredQuery, d.fullName, d.nationalId, d.phone, d.licenseNumber),
+			),
+			badges: data.badges.filter((b) =>
+				matchesQuery(
+					deferredQuery,
+					b.driverName,
+					b.badgeNumber,
+					b.nationalId,
+					b.vehicleNumber,
+				),
+			),
+			vehicles: data.vehicles.filter((v) =>
+				matchesQuery(deferredQuery, v.vehicleNumber, v.model, v.color),
+			),
+		};
+	}, [data, deferredQuery, searched]);
 
-  return (
-    <DashboardLayout role="admin">
-      <div className="mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-800">البحث</h1>
-        <p className="text-sm text-slate-400 mt-1">ابحث في جميع بيانات السائقين والمركبات والبطاقات</p>
-      </div>
+	return (
+		<>
+			<PageHeader
+				title="البحث"
+				description="ابحث في جميع بيانات السائقين والمركبات والبطاقات"
+			/>
 
-      <SearchInput
-        value={query}
-        onChange={runSearch}
-        placeholder="ابحث بالاسم، رقم الهوية، رقم البطاقة، رقم المركبة..."
-        className="max-w-lg mb-8"
-      />
+			<SearchInput
+				value={query}
+				onChange={setQuery}
+				placeholder="ابحث بالاسم، رقم الهوية، رقم البطاقة، رقم المركبة..."
+				className="max-w-lg mb-8"
+			/>
 
-      {!searched ? (
-        <div className="text-center py-16 text-slate-300">
-          <SearchIcon size={40} className="mx-auto mb-3" />
-          <p className="text-sm text-slate-400">ابدأ بكتابة كلمة للبحث</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-8">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <User size={16} className="text-indigo-500" />
-              <h3 className="text-sm font-bold text-slate-800">السائقون ({drivers.length})</h3>
-            </div>
-            <div className="bg-white rounded-xl ring-1 ring-slate-100 shadow-sm p-5">
-              <DriverTable drivers={drivers} basePath="/admin/drivers" showEmployee />
-            </div>
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <CreditCard size={16} className="text-indigo-500" />
-              <h3 className="text-sm font-bold text-slate-800">البطاقات ({badges.length})</h3>
-            </div>
-            <div className="bg-white rounded-xl ring-1 ring-slate-100 shadow-sm p-5">
-              <BadgeTable badges={badges} basePath="/admin/badges" showEmployee />
-            </div>
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Car size={16} className="text-indigo-500" />
-              <h3 className="text-sm font-bold text-slate-800">المركبات ({vehicles.length})</h3>
-            </div>
-            <div className="bg-white rounded-xl ring-1 ring-slate-100 shadow-sm p-5">
-              <VehicleTable vehicles={vehicles} />
-            </div>
-          </div>
-        </div>
-      )}
-    </DashboardLayout>
-  );
+			{loading ? (
+				<LoadingState />
+			) : error ? (
+				<ErrorState onRetry={reload} />
+			) : !searched ? (
+				<div className="text-center py-16">
+					<SearchIcon size={40} className="mx-auto mb-3 text-slate-300" />
+					<p className="text-sm text-slate-500">ابدأ بكتابة كلمة للبحث</p>
+				</div>
+			) : (
+				<div className="flex flex-col gap-8">
+					<Section icon={User} title="السائقون" count={results.drivers.length}>
+						<DriverTable
+							drivers={results.drivers}
+							basePath="/admin/drivers"
+							showEmployee
+							emptyText="لا يوجد سائقون مطابقون"
+						/>
+					</Section>
+					<Section icon={CreditCard} title="البطاقات" count={results.badges.length}>
+						<BadgeTable
+							badges={results.badges}
+							basePath="/admin/badges"
+							showEmployee
+							emptyText="لا توجد بطاقات مطابقة"
+						/>
+					</Section>
+					<Section icon={Car} title="المركبات" count={results.vehicles.length}>
+						<VehicleTable vehicles={results.vehicles} emptyText="لا توجد مركبات مطابقة" />
+					</Section>
+				</div>
+			)}
+		</>
+	);
 };
 
 export default AdminSearch;

@@ -1,34 +1,44 @@
-import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import DashboardLayout from "../../components/layout/DashboardLayout";
+import { CreditCard } from "lucide-react";
 import BadgeDetailView from "../../components/badges/BadgeDetailView";
+import Button from "../../components/common/Button";
+import EmptyState from "../../components/common/EmptyState";
+import ErrorState from "../../components/common/ErrorState";
+import LoadingState from "../../components/common/LoadingState";
 import { badgeService } from "../../services/badgeService";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
+import { useAsyncData } from "../../hooks/useAsyncData";
 
 const BadgeDetails = () => {
 	const { id } = useParams();
 	const { user } = useAuth();
-	const [badge, setBadge] = useState(null);
-	const [loading, setLoading] = useState(true);
+	const {
+		data: badge,
+		loading,
+		error,
+		reload,
+	} = useAsyncData(() => badgeService.getBadgeByIdForEmployee(id, user.id), [id, user.id]);
 
-	useEffect(() => {
-		badgeService.getBadgeByIdForEmployee(id, user.id).then((data) => {
-			setBadge(data);
-			setLoading(false);
-		});
-	}, [id, user.id]);
+	if (loading) return <LoadingState />;
+	if (error) return <ErrorState onRetry={reload} />;
+	if (!badge) {
+		return (
+			<div className="bg-white rounded-xl ring-1 ring-slate-100">
+				<EmptyState
+					icon={CreditCard}
+					title="لم يتم العثور على البطاقة"
+					description="ربما حُذفت هذه البطاقة أو لا تملك صلاحية عرضها."
+					action={
+						<Button to="/employee/badges" variant="secondary" size="sm">
+							العودة إلى بطاقاتي
+						</Button>
+					}
+				/>
+			</div>
+		);
+	}
 
-	return (
-		<DashboardLayout role="employee">
-			{loading ? (
-				<p className="text-sm text-slate-400">جارِ التحميل...</p>
-			) : !badge ? (
-				<p className="text-sm text-slate-400">لم يتم العثور على البطاقة</p>
-			) : (
-				<BadgeDetailView badge={badge} backPath="/employee/badges" />
-			)}
-		</DashboardLayout>
-	);
+	return <BadgeDetailView badge={badge} backPath="/employee/badges" />;
 };
 
 export default BadgeDetails;

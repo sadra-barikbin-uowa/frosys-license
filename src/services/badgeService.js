@@ -2,6 +2,7 @@ import { storage } from "./storage";
 import { ensureAllSeeded } from "../data/ensureSeeded";
 import { generateId, generateBadgeNumber } from "../utils/generateBadgeNumber";
 import { computeBadgeStatus } from "../utils/badgeStatus";
+import { AppError } from "../utils/errors";
 
 const BADGES_KEY = "badges";
 
@@ -58,6 +59,12 @@ export const badgeService = {
     const badges = ensureSeeded();
     const current = badges.find((badge) => badge.id === id);
     if (!current) return null;
+    if (
+      data.badgeNumber !== undefined &&
+      data.badgeNumber !== current.badgeNumber &&
+      badges.some((b) => b.id !== id && b.badgeNumber === data.badgeNumber)
+    )
+      throw new AppError("رقم البطاقة مستخدم لبطاقة أخرى");
     const updated = badges.map((b) => (b.id === id ? { ...b, ...data } : b));
     storage.write(BADGES_KEY, updated);
     const driverUpdates = {
@@ -84,7 +91,8 @@ export const badgeService = {
         }
         : vehicle));
     }
-    return updated.find((b) => b.id === id);
+    const saved = updated.find((b) => b.id === id);
+    return { ...saved, status: computeBadgeStatus(saved) };
   },
 
   async updateBadgeForEmployee(id, employeeId, data) {

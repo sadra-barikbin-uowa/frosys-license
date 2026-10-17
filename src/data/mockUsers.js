@@ -4,7 +4,7 @@ export const mockUsers = [
     username: "admin",
     password: "admin123",
     role: "admin",
-    name: "عبدالله الشمري",
+    name: "مدير",
     email: "admin@fleetid.com",
     phone: "0500000001",
     status: "Active",

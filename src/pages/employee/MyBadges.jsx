@@ -1,81 +1,96 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { FilePlus2 } from "lucide-react";
-import DashboardLayout from "../../components/layout/DashboardLayout";
+import { useDeferredValue, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { CreditCard, FilePlus2 } from "lucide-react";
 import SearchInput from "../../components/common/SearchInput";
 import Select from "../../components/common/Select";
 import Button from "../../components/common/Button";
+import EmptyState from "../../components/common/EmptyState";
+import ErrorState from "../../components/common/ErrorState";
+import LoadingState from "../../components/common/LoadingState";
+import PageHeader from "../../components/common/PageHeader";
 import BadgeCard from "../../components/badges/BadgeCard";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
+import { useAsyncData } from "../../hooks/useAsyncData";
 import { badgeService } from "../../services/badgeService";
 import { BADGE_STATUS_LABELS } from "../../utils/badgeStatus";
+import { matchesQuery } from "../../utils/search";
 
-const statusOptions = Object.entries(BADGE_STATUS_LABELS).map(
-	([value, label]) => ({ value, label }),
-);
+const statusOptions = Object.entries(BADGE_STATUS_LABELS).map(([value, label]) => ({
+	value,
+	label,
+}));
 
 const MyBadges = () => {
 	const { user } = useAuth();
-	const [badges, setBadges] = useState([]);
+	// الحالة تُحفظ في الرابط (?status=Expired) فتعمل الروابط القادمة من لوحة التحكم
+	const [searchParams, setSearchParams] = useSearchParams();
+	const status = searchParams.get("status") || "";
 	const [query, setQuery] = useState("");
-	const [status, setStatus] = useState("");
-	const [loading, setLoading] = useState(true);
+	const deferredQuery = useDeferredValue(query);
+	const {
+		data: badges,
+		loading,
+		error,
+		reload,
+	} = useAsyncData(() => badgeService.getBadgesByEmployee(user.id), [user.id], []);
 
-	useEffect(() => {
-		badgeService.getBadgesByEmployee(user.id).then((data) => {
-			setBadges(data);
-			setLoading(false);
-		});
-	}, [user.id]);
+	const filtered = useMemo(
+		() =>
+			badges.filter(
+				(b) =>
+					matchesQuery(
+						deferredQuery,
+						b.driverName,
+						b.badgeNumber,
+						b.nationalId,
+						b.vehicleNumber,
+					) &&
+					(!status || b.status === status),
+			),
+		[badges, deferredQuery, status],
+	);
 
-	const filtered = badges.filter((b) => {
-		const matchesQuery =
-			b.driverName.includes(query) ||
-			b.badgeNumber.includes(query) ||
-			(b.nationalId || "").includes(query);
-		const matchesStatus = !status || b.status === status;
-		return matchesQuery && matchesStatus;
-	});
+	const handleStatusChange = (value) =>
+		setSearchParams(value ? { status: value } : {}, { replace: true });
 
 	return (
-		<DashboardLayout role="employee">
-			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-				<div>
-					<h1 className="text-xl sm:text-2xl font-bold text-slate-800">
-						البطاقات الخاصة بي
-					</h1>
-					<p className="text-sm text-slate-400 mt-1">
-						جميع البطاقات التعريفية التي أنشأتها
-					</p>
-				</div>
-				<Link to="/employee/badges/create">
-					<Button icon={FilePlus2}>إصدار بطاقة</Button>
-				</Link>
-			</div>
+		<>
+			<PageHeader
+				title="البطاقات الخاصة بي"
+				description="جميع البطاقات التعريفية التي أنشأتها"
+				actions={
+					<Button to="/employee/badges/create" icon={FilePlus2}>
+						إصدار بطاقة
+					</Button>
+				}
+			/>
 
 			<div className="flex flex-col sm:flex-row gap-3 mb-5">
 				<SearchInput
 					value={query}
 					onChange={setQuery}
 					placeholder="ابحث بالاسم أو رقم البطاقة..."
-					className="max-w-sm"
+					className="sm:flex-1 sm:max-w-sm"
 				/>
 				<Select
 					value={status}
-					onChange={(e) => setStatus(e.target.value)}
+					onChange={(e) => handleStatusChange(e.target.value)}
 					options={statusOptions}
 					placeholder="كل الحالات"
-					className="max-w-[180px]"
+					className="sm:w-48"
 				/>
 			</div>
 
 			{loading ? (
-				<p className="text-sm text-slate-400 py-10 text-center">
-					جارِ التحميل...
-				</p>
+				<LoadingState />
+			) : error ? (
+				<ErrorState onRetry={reload} />
 			) : filtered.length === 0 ? (
-				<div className="bg-white rounded-xl ring-1 ring-slate-100 p-10 text-center text-sm text-slate-400">
-					لا توجد بطاقات مطابقة
+				<div className="bg-white rounded-xl ring-1 ring-slate-100">
+					<EmptyState
+						icon={CreditCard}
+						title={query || status ? "لا توجد بطاقات مطابقة" : "لم تقم بإنشاء أي بطاقة بعد"}
+					/>
 				</div>
 			) : (
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -84,7 +99,7 @@ const MyBadges = () => {
 					))}
 				</div>
 			)}
-		</DashboardLayout>
+		</>
 	);
 };
 

@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles } from "lucide-react";
-import DashboardLayout from "../../components/layout/DashboardLayout";
+import PageHeader from "../../components/common/PageHeader";
+import Card from "../../components/common/Card";
 import DriverForm from "../../components/drivers/DriverForm";
 import BadgePreview from "../../components/badges/BadgePreview";
 import Button from "../../components/common/Button";
-import { useAuth } from "../../context/AuthContext";
-import { useToast } from "../../context/ToastContext";
-import { useSettings } from "../../context/SettingsContext";
+import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../hooks/useToast";
+import { useSettings } from "../../hooks/useSettings";
 import { driverService } from "../../services/driverService";
 import { vehicleService } from "../../services/vehicleService";
 import { badgeService } from "../../services/badgeService";
 import { validateDriverForm } from "../../utils/validation";
 import { addYears, todayISO } from "../../utils/formatDate";
+import { getErrorMessage } from "../../utils/errors";
 
 const initialState = {
 	fullName: "",
@@ -49,35 +51,44 @@ const AddDriver = ({ role = "employee" }) => {
 		if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
 	};
 
+	const validityYears = Number(settings.badgeValidityYears) || 1;
+
 	const handleSubmit = async () => {
+		if (submitting) return;
 		const { isValid, errors: validationErrors } = validateDriverForm(data);
 		setErrors(validationErrors);
 		if (!isValid) {
 			showToast("الرجاء تعبئة جميع الحقول المطلوبة بشكل صحيح", "error");
+			// ننقل التركيز إلى أول حقل فيه خطأ ليراه المستخدم دون بحث
+			requestAnimationFrame(() =>
+				document.querySelector('[aria-invalid="true"]')?.focus({ preventScroll: false }),
+			);
 			return;
 		}
 
 		setSubmitting(true);
+		let createdDriverId = null;
 		try {
 			const newDriver = await driverService.createDriver({
-				fullName: data.fullName,
+				fullName: data.fullName.trim(),
 				personType: data.personType,
 				fatherName: data.fatherName,
 				motherName: data.motherName,
 				birthDate: data.birthDate,
-				phone: data.phone,
+				phone: data.phone.trim(),
 				address: data.address,
-				nationalId: data.nationalId,
+				nationalId: data.nationalId.trim(),
 				photo: data.photo,
-				licenseNumber: data.licenseNumber,
+				licenseNumber: data.licenseNumber.trim(),
 				licenseIssue: data.licenseIssue,
 				licenseExpiry: data.licenseExpiry,
 				createdBy: user.id,
 				createdByName: user.name,
 			});
+			createdDriverId = newDriver.id;
 
 			const newVehicle = await vehicleService.createVehicle({
-				vehicleNumber: data.vehicleNumber,
+				vehicleNumber: data.vehicleNumber.trim(),
 				vehicleType: data.vehicleType,
 				model: data.model,
 				year: data.year,
@@ -95,20 +106,17 @@ const AddDriver = ({ role = "employee" }) => {
 			const newBadge = await badgeService.createBadge({
 				driverId: newDriver.id,
 				vehicleId: newVehicle.id,
-				driverName: data.fullName,
+				driverName: data.fullName.trim(),
 				personType: data.personType,
 				driverPhoto: data.photo,
-				nationalId: data.nationalId,
-				licenseNumber: data.licenseNumber,
+				nationalId: data.nationalId.trim(),
+				licenseNumber: data.licenseNumber.trim(),
 				vehicleType: data.vehicleType,
-				vehicleNumber: data.vehicleNumber,
+				vehicleNumber: data.vehicleNumber.trim(),
 				vehicleModel: data.model,
 				vehicleColor: data.color,
 				issueDate,
-				expiryDate: addYears(
-					issueDate,
-					Number(settings.badgeValidityYears) || 1,
-				),
+				expiryDate: addYears(issueDate, validityYears),
 				createdBy: user.id,
 				createdByName: user.name,
 			});
@@ -117,62 +125,49 @@ const AddDriver = ({ role = "employee" }) => {
 			navigate(`/${role}/badges/${newBadge.id}`);
 		} catch (err) {
 			console.error(err);
-			showToast("حدث خطأ أثناء إنشاء البطاقة، حاول مرة أخرى", "error");
-		} finally {
+			// إن فشلت إحدى الخطوات (مثل امتلاء التخزين) نحذف ما أُنشئ منها حتى لا تبقى سجلات ناقصة
+			if (createdDriverId) await driverService.deleteDriver(createdDriverId).catch(() => {});
+			showToast(getErrorMessage(err, "حدث خطأ أثناء إنشاء البطاقة، حاول مرة أخرى"), "error");
 			setSubmitting(false);
 		}
 	};
 
 	return (
-		<DashboardLayout role={role}>
-			<div className="mb-6">
-				<h1 className="text-xl sm:text-2xl font-bold text-slate-800">
-					إضافة سائق جديد
-				</h1>
-				<p className="text-sm text-slate-400 mt-1">
-					أدخل بيانات السائق والمركبة، وستظهر معاينة البطاقة مباشرة أثناء
-					الكتابة
-				</p>
-			</div>
+		<>
+			<PageHeader
+				title="إضافة سائق جديد"
+				description="أدخل بيانات السائق والمركبة، وستظهر معاينة البطاقة مباشرة أثناء الكتابة"
+			/>
 
-			<div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
+			<div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-6 items-start">
 				<DriverForm data={data} errors={errors} onChange={handleChange} />
 
-				<div className="lg:sticky lg:top-6 flex flex-col gap-4">
-					<div className="bg-white rounded-xl ring-1 ring-slate-100 shadow-sm p-5">
+				<div className="lg:sticky lg:top-6 flex flex-col gap-4 min-w-0">
+					<Card>
 						<div className="flex items-center gap-2 mb-4">
 							<Sparkles size={16} className="text-indigo-500" />
-							<h3 className="text-sm font-bold text-slate-800">
-								معاينة البطاقة
-							</h3>
+							<h2 className="text-sm font-bold text-slate-800">معاينة البطاقة</h2>
 						</div>
 						<BadgePreview
+							fit
 							data={{
 								...data,
 								issueDate: todayISO(),
-								expiryDate: addYears(
-									todayISO(),
-									Number(settings.badgeValidityYears) || 1,
-								),
+								expiryDate: addYears(todayISO(), validityYears),
 								vehicleColor: data.color,
 							}}
 						/>
-						<p className="text-[11px] text-slate-400 text-center mt-4">
+						<p className="text-[11px] text-slate-500 text-center mt-4">
 							يتم توليد رقم البطاقة تلقائيًا عند الضغط على "إنشاء البطاقة"
 						</p>
-					</div>
+					</Card>
 
-					<Button
-						onClick={handleSubmit}
-						loading={submitting}
-						size="lg"
-						className="w-full"
-					>
+					<Button onClick={handleSubmit} loading={submitting} size="lg" className="w-full">
 						إنشاء البطاقة
 					</Button>
 				</div>
 			</div>
-		</DashboardLayout>
+		</>
 	);
 };
 
