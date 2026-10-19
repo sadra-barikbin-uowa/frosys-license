@@ -5,6 +5,7 @@ const SETTINGS_KEY = "settings";
 export const defaultSettings = {
 	systemName: "نظام إدارة السائقين والمركبات",
 	logo: "",
+	managerSignature: "",
 	badgeColor: "#4338ca",
 	contactInfo: "",
 	badgeValidityYears: 1,

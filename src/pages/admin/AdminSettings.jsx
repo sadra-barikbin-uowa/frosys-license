@@ -5,6 +5,7 @@ import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import ImageUpload from "../../components/common/ImageUpload";
+import SignaturePad from "../../components/common/SignaturePad";
 import BadgePreview from "../../components/badges/BadgePreview";
 import { useToast } from "../../hooks/useToast";
 import { useSettings } from "../../hooks/useSettings";
@@ -32,6 +33,7 @@ const SAMPLE_BADGE = {
 
 const toForm = (settings) => ({
 	logo: settings.logo || "",
+	managerSignature: settings.managerSignature || "",
 	systemName: settings.systemName,
 	contactInfo: settings.contactInfo || "",
 	badgeColor: settings.badgeColor,
@@ -129,6 +131,7 @@ const AdminSettings = () => {
 	// البطاقة تُعرض بقيم النموذج الحالية (حتى قبل الحفظ) لتوضيح أثر كل تغيير
 	const previewSettings = {
 		logo: form.logo,
+		managerSignature: form.managerSignature,
 		systemName: form.systemName.trim() || defaultSettings.systemName,
 		contactInfo: form.contactInfo,
 		badgeColor: form.badgeColor,
@@ -155,6 +158,10 @@ const AdminSettings = () => {
 								onChange={(value) => setField("logo", value || "")}
 								maxSize={256}
 								format="png"
+							/>
+							<SignaturePad
+								value={form.managerSignature}
+								onChange={(value) => setField("managerSignature", value)}
 							/>
 							<Input
 								label="اسم النظام / المؤسسة"

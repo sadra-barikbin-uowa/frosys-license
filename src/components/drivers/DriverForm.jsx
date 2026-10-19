@@ -23,7 +23,8 @@ const Section = ({ title, icon: Icon, children }) => (
 const DriverForm = ({ data, errors, onChange }) => {
 	const set = (field) => (e) => onChange(field, e.target.value);
 	// حقول الأرقام: نحوّل الأرقام العربية (٠١٢) إلى لاتينية ليبقى البحث والتحقق متسقًا
-	const setDigits = (field) => (e) => onChange(field, toLatinDigits(e.target.value));
+	const setDigits = (field) => (e) =>
+		onChange(field, toLatinDigits(e.target.value));
 
 	return (
 		<div className="flex flex-col gap-5">
@@ -62,7 +63,6 @@ const DriverForm = ({ data, errors, onChange }) => {
 					/>
 					<Input
 						label="رقم الهوية الوطنية"
-						required
 						value={data.nationalId}
 						onChange={setDigits("nationalId")}
 						error={errors.nationalId}
@@ -126,7 +126,10 @@ const DriverForm = ({ data, errors, onChange }) => {
 
 			<Section title="معلومات المركبة" icon={CarIcon}>
 				<div role="group" aria-labelledby="vehicle-type-label">
-					<span id="vehicle-type-label" className="text-sm font-medium text-slate-700 mb-2 block">
+					<span
+						id="vehicle-type-label"
+						className="text-sm font-medium text-slate-700 mb-2 block"
+					>
 						نوع المركبة <span className="text-rose-500">*</span>
 					</span>
 					<div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">

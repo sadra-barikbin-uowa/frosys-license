@@ -153,7 +153,7 @@ const BadgeFront = ({ data, id, settings }) => {
 			</div>
 
 			{/* الأسفل: الحالة والتواريخ والتوقيع */}
-			<div className="absolute bottom-0 inset-x-0 h-[42px] px-3.5 flex items-center justify-between bg-slate-50 border-t border-slate-100">
+			<div className="absolute bottom-0 inset-x-0 h-[48px] px-3.5 flex items-center justify-between bg-slate-50 border-t border-slate-100">
 				<div>
 					<div className="print-hide-status flex items-center gap-1.5">
 						<span
@@ -169,8 +169,17 @@ const BadgeFront = ({ data, id, settings }) => {
 					</p>
 				</div>
 				<div className="text-center">
-					<div className="w-[70px] h-3 border-b border-slate-400" />
-					<p className="mt-0.5 text-[7px] font-semibold text-slate-600">توقيع المدير</p>
+					<div className="relative flex h-8 w-[80px] items-center justify-center">
+						{settings.managerSignature && (
+							<img
+								src={settings.managerSignature}
+								alt="توقيع المدير"
+								className="h-8 w-full object-contain"
+							/>
+						)}
+						<div className="absolute inset-x-0 bottom-0 border-b border-slate-500" />
+					</div>
+					<p className="text-[8px] font-bold text-slate-700">توقيع المدير</p>
 				</div>
 			</div>
 		</div>
