@@ -51,9 +51,8 @@ const EditDriver = ({ role = "employee" }) => {
 		const { driver, vehicle } = loaded;
 		return {
 			fullName: driver.fullName || "",
+			jobTitle: driver.jobTitle || "",
 			personType: driver.personType || "",
-			fatherName: driver.fatherName || "",
-			motherName: driver.motherName || "",
 			birthDate: driver.birthDate || "",
 			phone: driver.phone || "",
 			address: driver.address || "",
@@ -91,9 +90,8 @@ const EditDriver = ({ role = "employee" }) => {
 		try {
 			const driverUpdates = {
 				fullName: data.fullName.trim(),
+				jobTitle: data.jobTitle.trim(),
 				personType: data.personType,
-				fatherName: data.fatherName,
-				motherName: data.motherName,
 				birthDate: data.birthDate,
 				phone: data.phone.trim(),
 				address: data.address,

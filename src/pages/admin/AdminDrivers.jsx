@@ -24,7 +24,7 @@ const AdminDrivers = () => {
 	const filtered = useMemo(
 		() =>
 			drivers.filter((d) =>
-				matchesQuery(deferredQuery, d.fullName, d.nationalId, d.phone, d.licenseNumber),
+				matchesQuery(deferredQuery, d.fullName, d.jobTitle, d.nationalId, d.phone, d.licenseNumber),
 			),
 		[drivers, deferredQuery],
 	);

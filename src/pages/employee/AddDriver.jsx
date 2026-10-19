@@ -18,9 +18,8 @@ import { getErrorMessage } from "../../utils/errors";
 
 const initialState = {
 	fullName: "",
+	jobTitle: "",
 	personType: "",
-	fatherName: "",
-	motherName: "",
 	birthDate: "",
 	phone: "",
 	address: "",
@@ -71,9 +70,8 @@ const AddDriver = ({ role = "employee" }) => {
 		try {
 			const newDriver = await driverService.createDriver({
 				fullName: data.fullName.trim(),
+				jobTitle: data.jobTitle.trim(),
 				personType: data.personType,
-				fatherName: data.fatherName,
-				motherName: data.motherName,
 				birthDate: data.birthDate,
 				phone: data.phone.trim(),
 				address: data.address,
@@ -107,6 +105,7 @@ const AddDriver = ({ role = "employee" }) => {
 				driverId: newDriver.id,
 				vehicleId: newVehicle.id,
 				driverName: data.fullName.trim(),
+				jobTitle: data.jobTitle.trim(),
 				personType: data.personType,
 				driverPhoto: data.photo,
 				nationalId: data.nationalId.trim(),

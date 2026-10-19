@@ -12,6 +12,7 @@ const BadgeCard = ({ badge, basePath = "/employee/badges" }) => {
 				<Avatar src={badge.driverPhoto} alt={badge.driverName} size="lg" shape="lg" className="ring-1 ring-slate-100" />
 				<div className="min-w-0 flex-1">
 					<p className="text-sm font-bold text-slate-800 truncate">{badge.driverName}</p>
+					<p className="text-xs text-slate-500 truncate">{badge.jobTitle || "—"}</p>
 					<p className="text-xs text-indigo-600 font-medium">{badge.badgeNumber}</p>
 					<p className="text-xs text-slate-500 mt-0.5 truncate">
 						{[vehicleTypeLabel(badge.vehicleType), badge.vehicleNumber]

@@ -3,7 +3,6 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import {
 	ArrowRight,
 	User,
-	Users,
 	Phone,
 	MapPin,
 	IdCard,
@@ -150,9 +149,8 @@ const DriverDetails = ({ role = "employee" }) => {
 						<h2 className="text-sm font-bold text-slate-800 mb-4">المعلومات الشخصية</h2>
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 							<InfoRow icon={Phone} label="رقم الهاتف" value={driver.phone} />
+							<InfoRow icon={User} label="العنوان الوظيفي" value={driver.jobTitle} />
 							<InfoRow icon={MapPin} label="العنوان" value={driver.address} />
-							<InfoRow icon={Users} label="اسم الأب" value={driver.fatherName} />
-							<InfoRow icon={Users} label="اسم الأم" value={driver.motherName} />
 							<InfoRow icon={Calendar} label="تاريخ الميلاد" value={driver.birthDate && formatDate(driver.birthDate)} />
 							<InfoRow icon={IdCard} label="رقم رخصة القيادة" value={driver.licenseNumber} />
 							<InfoRow

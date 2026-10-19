@@ -79,6 +79,7 @@ const AdminBadges = () => {
 					matchesQuery(
 						deferredQuery,
 						b.driverName,
+						b.jobTitle,
 						b.badgeNumber,
 						b.nationalId,
 						b.vehicleNumber,

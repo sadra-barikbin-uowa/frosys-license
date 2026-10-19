@@ -54,6 +54,7 @@ const BadgeDetailView = ({ badge, backPath, isAdmin = false }) => {
 		setDraft({
 			...currentBadge,
 			driverName: currentBadge.driverName || currentBadge.fullName || "",
+			jobTitle: currentBadge.jobTitle || "",
 			photo: currentBadge.driverPhoto || currentBadge.photo || null,
 			// الحالة المحسوبة (منتهي/قريب الانتهاء) ليست قيمة يمكن اختيارها؛ المتاح: فعال أو موقوف
 			status:
@@ -81,6 +82,7 @@ const BadgeDetailView = ({ badge, backPath, isAdmin = false }) => {
 		try {
 			const payload = {
 				driverName: draft.driverName.trim(),
+				jobTitle: draft.jobTitle || "",
 				personType: draft.personType,
 				nationalId: draft.nationalId,
 				badgeNumber: draft.badgeNumber.trim(),
@@ -119,6 +121,7 @@ const BadgeDetailView = ({ badge, backPath, isAdmin = false }) => {
 
 	const rows = [
 		["اسم السائق", currentBadge.driverName],
+		["العنوان الوظيفي", currentBadge.jobTitle],
 		["صفة حامل البطاقة", personTypeLabel(currentBadge.personType)],
 		["رقم الهوية", currentBadge.nationalId],
 		["رقم رخصة القيادة", currentBadge.licenseNumber],
@@ -277,6 +280,11 @@ const EditBadgeForm = ({ data, errors, onChange, setDraftValue }) => (
 					value={data.driverName || ""}
 					onChange={setDraftValue("driverName")}
 					error={errors.driverName}
+				/>
+				<Input
+					label="العنوان الوظيفي"
+					value={data.jobTitle || ""}
+					onChange={setDraftValue("jobTitle")}
 				/>
 				<Select
 					label="صفة حامل البطاقة"

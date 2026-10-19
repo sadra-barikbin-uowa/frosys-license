@@ -34,7 +34,7 @@ const EmployeeSearch = () => {
 		() =>
 			searched
 				? data.drivers.filter((d) =>
-						matchesQuery(deferredQuery, d.fullName, d.nationalId, d.phone, d.licenseNumber),
+						matchesQuery(deferredQuery, d.fullName, d.jobTitle, d.nationalId, d.phone, d.licenseNumber),
 					)
 				: [],
 		[data.drivers, deferredQuery, searched],
@@ -46,6 +46,7 @@ const EmployeeSearch = () => {
 						matchesQuery(
 							deferredQuery,
 							b.driverName,
+							b.jobTitle,
 							b.badgeNumber,
 							b.nationalId,
 							b.vehicleNumber,

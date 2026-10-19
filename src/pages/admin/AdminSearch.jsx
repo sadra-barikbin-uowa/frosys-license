@@ -49,12 +49,13 @@ const AdminSearch = () => {
 		if (!searched) return EMPTY;
 		return {
 			drivers: data.drivers.filter((d) =>
-				matchesQuery(deferredQuery, d.fullName, d.nationalId, d.phone, d.licenseNumber),
+				matchesQuery(deferredQuery, d.fullName, d.jobTitle, d.nationalId, d.phone, d.licenseNumber),
 			),
 			badges: data.badges.filter((b) =>
 				matchesQuery(
 					deferredQuery,
 					b.driverName,
+					b.jobTitle,
 					b.badgeNumber,
 					b.nationalId,
 					b.vehicleNumber,

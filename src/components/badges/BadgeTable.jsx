@@ -51,8 +51,9 @@ const BadgeTable = ({
 								<td className="py-3 px-3">
 									<div className="flex items-center gap-2.5">
 										<Avatar src={badge.driverPhoto} alt={badge.driverName} />
-										<span className="font-medium text-slate-700 whitespace-nowrap">
-											{badge.driverName}
+										<span className="flex flex-col min-w-0">
+											<span className="font-medium text-slate-700 whitespace-nowrap">{badge.driverName}</span>
+											<span className="text-xs text-slate-500 truncate">{badge.jobTitle || "—"}</span>
 										</span>
 									</div>
 								</td>
@@ -152,6 +153,7 @@ const BadgeTable = ({
 								<Avatar src={badge.driverPhoto} alt={badge.driverName} size="lg" shape="lg" />
 								<div className="min-w-0 flex-1">
 									<p className="text-sm font-bold text-slate-800 truncate">{badge.driverName}</p>
+									<p className="text-xs text-slate-500 truncate">{badge.jobTitle || "—"}</p>
 									<p className="text-xs text-indigo-600 font-medium">{badge.badgeNumber}</p>
 								</div>
 								<StatusBadge badge={badge} />

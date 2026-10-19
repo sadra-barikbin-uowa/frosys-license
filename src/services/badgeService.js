@@ -11,42 +11,52 @@ const ensureSeeded = () => {
   return storage.read(BADGES_KEY, []);
 };
 
+const withDriverJobTitle = (badge) => {
+  if (badge.jobTitle || !badge.driverId) return badge;
+  const driver = storage.read("drivers", []).find((item) => item.id === badge.driverId);
+  return { ...badge, jobTitle: driver?.jobTitle || "" };
+};
+
 // عند ربط Backend مستقبلاً: استبدل الدوال هنا بطلبات axios بنفس التوقيع
 // مثال: createBadge -> axios.post('/api/badges', data).then(res => res.data)
 export const badgeService = {
   async getBadges() {
     await storage.delay();
-    return ensureSeeded().map((b) => ({ ...b, status: computeBadgeStatus(b) }));
+    return ensureSeeded().map((b) => ({ ...withDriverJobTitle(b), status: computeBadgeStatus(b) }));
   },
 
   async getBadgeById(id) {
     await storage.delay();
     const badge = ensureSeeded().find((b) => b.id === id);
-    return badge ? { ...badge, status: computeBadgeStatus(badge) } : null;
+    return badge ? { ...withDriverJobTitle(badge), status: computeBadgeStatus(badge) } : null;
   },
 
   async getBadgeByIdForEmployee(id, employeeId) {
     await storage.delay();
     const badge = ensureSeeded().find((b) => b.id === id && b.createdBy === employeeId);
-    return badge ? { ...badge, status: computeBadgeStatus(badge) } : null;
+    return badge ? { ...withDriverJobTitle(badge), status: computeBadgeStatus(badge) } : null;
   },
 
   async getBadgesByEmployee(employeeId) {
     await storage.delay();
     return ensureSeeded()
       .filter((b) => b.createdBy === employeeId)
-      .map((b) => ({ ...b, status: computeBadgeStatus(b) }));
+      .map((b) => ({ ...withDriverJobTitle(b), status: computeBadgeStatus(b) }));
   },
 
   async createBadge(data) {
     await storage.delay();
     const badges = ensureSeeded();
+    const driver = data.driverId
+      ? storage.read("drivers", []).find((item) => item.id === data.driverId)
+      : null;
     const badgeNumber = generateBadgeNumber();
     const newBadge = {
       issueDate: new Date().toISOString().slice(0, 10),
       status: "Active",
       createdAt: new Date().toISOString(),
       ...data,
+      jobTitle: data.jobTitle || driver?.jobTitle || "",
       id: generateId("BD"),
       badgeNumber,
     };
@@ -69,6 +79,7 @@ export const badgeService = {
     storage.write(BADGES_KEY, updated);
     const driverUpdates = {
       fullName: data.driverName || data.fullName,
+      jobTitle: data.jobTitle,
       personType: data.personType,
       photo: data.driverPhoto || data.photo,
       nationalId: data.nationalId,

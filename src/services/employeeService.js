@@ -50,6 +50,7 @@ export const employeeService = {
 			...data,
 			name: data.name.trim(),
 			username,
+			jobTitle: data.jobTitle.trim(),
 		};
 		storage.write(USERS_KEY, [...users, newEmployee]);
 		return newEmployee;
@@ -64,6 +65,7 @@ export const employeeService = {
 			assertUniqueUsername(users, changes.username, id);
 		}
 		if (changes.name !== undefined) changes.name = changes.name.trim();
+		if (changes.jobTitle !== undefined) changes.jobTitle = changes.jobTitle.trim();
 		const updated = users.map((u) => (u.id === id ? { ...u, ...changes } : u));
 		storage.write(USERS_KEY, updated);
 

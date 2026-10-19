@@ -45,6 +45,12 @@ const DriverForm = ({ data, errors, onChange }) => {
 						placeholder="مثال: محمد أحمد الغامدي"
 						autoComplete="off"
 					/>
+					<Input
+						label="العنوان الوظيفي"
+						value={data.jobTitle}
+						onChange={set("jobTitle")}
+						placeholder="مثال: سائق شاحنة"
+					/>
 					<Select
 						label="صفة حامل البطاقة"
 						required
@@ -64,8 +70,6 @@ const DriverForm = ({ data, errors, onChange }) => {
 						inputMode="numeric"
 						autoComplete="off"
 					/>
-					<Input label="اسم الأب" value={data.fatherName} onChange={set("fatherName")} />
-					<Input label="اسم الأم" value={data.motherName} onChange={set("motherName")} />
 					<Input
 						label="تاريخ الميلاد"
 						type="date"

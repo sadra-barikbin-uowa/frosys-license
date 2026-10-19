@@ -97,6 +97,7 @@ const CreateBadge = ({ role = "employee" }) => {
 				driverId: selectedDriver.id,
 				vehicleId: vehicle?.id,
 				driverName: selectedDriver.fullName,
+				jobTitle: selectedDriver.jobTitle,
 				personType: selectedDriver.personType,
 				driverPhoto: selectedDriver.photo,
 				nationalId: selectedDriver.nationalId,

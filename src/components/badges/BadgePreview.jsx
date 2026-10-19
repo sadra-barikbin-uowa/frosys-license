@@ -43,8 +43,8 @@ const LogoMark = ({ logo, size }) => (
 
 const InfoCell = ({ label, value }) => (
 	<div className="leading-tight min-w-0">
-		<p className="text-[7px] text-slate-400">{label}</p>
-		<p className="text-[9px] font-semibold text-slate-700 truncate">{value}</p>
+		<p className="text-[8px] font-bold text-slate-800">{label}</p>
+		<p className="text-[10px] font-bold text-slate-950 truncate">{value}</p>
 	</div>
 );
 
@@ -77,25 +77,13 @@ const BadgeFront = ({ data, id, settings }) => {
 				<div className="flex items-center gap-2 min-w-0">
 					<LogoMark logo={settings.logo} size={28} />
 					<div className="min-w-0">
-						<p className="text-[9px] font-bold leading-tight truncate max-w-[130px]">
+						<p className="text-[10px] font-bold leading-tight truncate max-w-[130px]">
 							{settings.systemName}
-						</p>
-						<p
-							className="text-[7px] leading-tight opacity-80 tracking-wide"
-							dir="ltr"
-						>
-							DRIVER FLEET ID
 						</p>
 					</div>
 				</div>
 				<div className="text-left shrink-0">
-					<p className="text-[9px] font-bold leading-tight">بطاقة تعريف سائق</p>
-					<p
-						className="text-[7px] leading-tight opacity-80 tracking-wide"
-						dir="ltr"
-					>
-						DRIVER ID CARD
-					</p>
+					<p className="text-[10px] font-bold leading-tight">بطاقة تعريف سائق</p>
 				</div>
 				<div className="absolute -bottom-6 -left-6 w-20 h-20 rounded-full border border-white/15" />
 				<div className="absolute -bottom-10 left-10 w-16 h-16 rotate-45 border border-white/10" />
@@ -118,37 +106,42 @@ const BadgeFront = ({ data, id, settings }) => {
 
 			{/* بيانات حامل البطاقة */}
 			<div className="absolute top-[58px] right-[92px] left-3.5">
-				<p className="text-[12px] font-bold text-slate-800 truncate leading-tight">
+				<p className="text-[14px] font-extrabold text-slate-950 truncate leading-tight">
 					{data.driverName || data.fullName || "اسم السائق الثلاثي"}
 				</p>
 				<p
-					className="mt-0.5 text-[8px] font-semibold"
+					className="mt-0.5 text-[9px] font-bold"
 					style={{ color: accent }}
 				>
 					{personTypeLabel(data.personType)}
 				</p>
-				<p className="mt-1 text-[8px] text-slate-500 leading-snug truncate">
+				<p className="text-[9px] font-semibold text-slate-700 leading-snug truncate">
+					العنوان الوظيفي:{" "}
+					<span className="font-bold text-slate-900">
+						{data.jobTitle || "—"}
+					</span>
+				</p>
+				<p className="mt-1 text-[9px] font-semibold text-slate-700 leading-snug truncate">
 					رقم الهوية:{" "}
-					<span className="font-semibold text-slate-700">
+					<span className="font-bold text-slate-950">
 						{data.nationalId || "—"}
 					</span>
 				</p>
-				<p className="text-[8px] text-slate-500 leading-snug truncate">
+				<p className="text-[9px] font-semibold text-slate-700 leading-snug truncate">
 					رقم البطاقة:{" "}
-					<span className="font-semibold" style={{ color: accent }}>
+					<span className="font-bold text-slate-950" style={{ color: accent }}>
 						{data.badgeNumber || "سيتم توليده تلقائيًا"}
 					</span>
 				</p>
 			</div>
 
 			{/* معلومات المركبة */}
-			<div className="absolute inset-x-3.5 top-[122px] grid grid-cols-3 gap-x-2 gap-y-1.5">
+			<div className="absolute inset-x-3.5 top-[136px] grid grid-cols-4 gap-x-1">
 				<InfoCell
 					label="نوع المركبة"
 					value={data.vehicleType ? vehicleTypeLabel(data.vehicleType) : "—"}
 				/>
 				<InfoCell label="رقم المركبة" value={data.vehicleNumber || "—"} />
-				<InfoCell label="رخصة القيادة" value={data.licenseNumber || "—"} />
 				<InfoCell
 					label="لون المركبة"
 					value={data.vehicleColor || data.color || "—"}
@@ -162,22 +155,22 @@ const BadgeFront = ({ data, id, settings }) => {
 			{/* الأسفل: الحالة والتواريخ والتوقيع */}
 			<div className="absolute bottom-0 inset-x-0 h-[42px] px-3.5 flex items-center justify-between bg-slate-50 border-t border-slate-100">
 				<div>
-					<div className="flex items-center gap-1.5">
+					<div className="print-hide-status flex items-center gap-1.5">
 						<span
 							className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[status]}`}
 						/>
-						<span className="text-[8px] font-bold text-slate-700">
+						<span className="text-[9px] font-bold text-slate-800">
 							بطاقة {badgeStatusLabel(data)}
 						</span>
 					</div>
-					<p className="mt-0.5 text-[7px] text-slate-500">
+					<p className="mt-0.5 text-[8px] font-bold text-slate-800">
 						إصدار: {formatDate(data.issueDate)} &nbsp;•&nbsp; انتهاء:{" "}
 						{formatDate(data.expiryDate)}
 					</p>
 				</div>
 				<div className="text-center">
 					<div className="w-[70px] h-3 border-b border-slate-400" />
-					<p className="mt-0.5 text-[7px] text-slate-400">توقيع المدير</p>
+					<p className="mt-0.5 text-[7px] font-semibold text-slate-600">توقيع المدير</p>
 				</div>
 			</div>
 		</div>
@@ -206,7 +199,7 @@ const BadgeBack = ({ id, data, settings }) => {
 							className="h-6 w-6 rounded object-contain bg-white p-0.5"
 						/>
 					)}
-					<p className="text-[10px] font-bold truncate">
+					<p className="text-[11px] font-bold truncate">
 						{settings.systemName}
 					</p>
 				</div>
@@ -223,17 +216,17 @@ const BadgeBack = ({ id, data, settings }) => {
 					>
 						{settings.systemName}
 					</p>
-					<p className="text-[9px] font-bold text-slate-800">
+					<p className="text-[10px] font-bold text-slate-900">
 						تعليمات الاستخدام
 					</p>
-					<ul className="mt-2 space-y-1 pr-4 text-[7px] leading-[1.35] text-slate-600 list-disc">
+					<ul className="mt-2 space-y-1 pr-4 text-[8px] leading-[1.4] font-semibold text-slate-700 list-disc">
 						<li>يرجى إبقاء البطاقة داخل المركبة أثناء الحركة.</li>
 						<li>يجب إظهار البطاقة عند الدخول والخروج من الموقع.</li>
 						<li>استخدم البطاقة فقط لصاحبها وعدم إعارتها لأي شخص.</li>
 						<li>في حال فقدان أو تلف البطاقة، تواصل مع الإدارة فورًا.</li>
 					</ul>
 				</div>
-				<div className="mt-2 flex items-center justify-between gap-2 text-[7px] text-slate-500">
+				<div className="mt-2 flex items-center justify-between gap-2 text-[8px] font-semibold text-slate-700">
 					<span>رقم البطاقة: {data.badgeNumber || "—"}</span>
 					<span className="truncate">{settings.contactInfo}</span>
 				</div>

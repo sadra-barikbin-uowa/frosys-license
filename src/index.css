@@ -171,6 +171,10 @@ textarea:focus-visible {
     display: none !important;
   }
 
+  #print-badge-area .print-hide-status {
+    display: none !important;
+  }
+
   #print-badge-area {
     display: flex !important;
     flex-direction: column;

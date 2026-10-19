@@ -17,6 +17,7 @@ const AdminDrivers = lazy(() => import("../pages/admin/AdminDrivers"));
 const AdminDriverDetails = lazy(() => import("../pages/admin/AdminDriverDetails"));
 const AdminVehicles = lazy(() => import("../pages/admin/AdminVehicles"));
 const AdminEmployees = lazy(() => import("../pages/admin/AdminEmployees"));
+const AdminEmployeeForm = lazy(() => import("../pages/admin/AdminEmployeeForm"));
 const AdminReports = lazy(() => import("../pages/admin/AdminReports"));
 const AdminSearch = lazy(() => import("../pages/admin/AdminSearch"));
 const AdminSettings = lazy(() => import("../pages/admin/AdminSettings"));
@@ -54,6 +55,8 @@ const AppRoutes = () => {
 						<Route path="/admin/drivers/:id/edit" element={<EditDriver role="admin" />} />
 						<Route path="/admin/vehicles" element={<AdminVehicles />} />
 						<Route path="/admin/employees" element={<AdminEmployees />} />
+						<Route path="/admin/employees/add" element={<AdminEmployeeForm />} />
+						<Route path="/admin/employees/:id/edit" element={<AdminEmployeeForm />} />
 						<Route path="/admin/reports" element={<AdminReports />} />
 						<Route path="/admin/search" element={<AdminSearch />} />
 						<Route path="/admin/settings" element={<AdminSettings />} />
