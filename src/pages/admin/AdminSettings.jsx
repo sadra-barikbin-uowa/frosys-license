@@ -34,6 +34,8 @@ const SAMPLE_BADGE = {
 const toForm = (settings) => ({
 	logo: settings.logo || "",
 	managerSignature: settings.managerSignature || "",
+	managerSignatureColor: settings.managerSignatureColor || defaultSettings.managerSignatureColor,
+	managerSignatureWidth: Number(settings.managerSignatureWidth) || defaultSettings.managerSignatureWidth,
 	systemName: settings.systemName,
 	contactInfo: settings.contactInfo || "",
 	badgeColor: settings.badgeColor,
@@ -132,6 +134,8 @@ const AdminSettings = () => {
 	const previewSettings = {
 		logo: form.logo,
 		managerSignature: form.managerSignature,
+		managerSignatureColor: form.managerSignatureColor,
+		managerSignatureWidth: form.managerSignatureWidth,
 		systemName: form.systemName.trim() || defaultSettings.systemName,
 		contactInfo: form.contactInfo,
 		badgeColor: form.badgeColor,
@@ -162,6 +166,10 @@ const AdminSettings = () => {
 							<SignaturePad
 								value={form.managerSignature}
 								onChange={(value) => setField("managerSignature", value)}
+								color={form.managerSignatureColor}
+								onColorChange={(value) => setField("managerSignatureColor", value)}
+								width={form.managerSignatureWidth}
+								onWidthChange={(value) => setField("managerSignatureWidth", value)}
 							/>
 							<Input
 								label="اسم النظام / المؤسسة"

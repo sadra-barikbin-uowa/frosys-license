@@ -6,6 +6,8 @@ export const defaultSettings = {
 	systemName: "نظام إدارة السائقين والمركبات",
 	logo: "",
 	managerSignature: "",
+	managerSignatureColor: "#172554",
+	managerSignatureWidth: 4,
 	badgeColor: "#4338ca",
 	contactInfo: "",
 	badgeValidityYears: 1,

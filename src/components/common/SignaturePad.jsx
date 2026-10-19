@@ -4,7 +4,14 @@ import { Eraser, PenLine } from "lucide-react";
 const CANVAS_WIDTH = 600;
 const CANVAS_HEIGHT = 150;
 
-const SignaturePad = ({ value, onChange }) => {
+const SignaturePad = ({
+	value,
+	onChange,
+	color,
+	onColorChange,
+	width,
+	onWidthChange,
+}) => {
 	const canvasRef = useRef(null);
 	const drawing = useRef(false);
 	const hasDrawing = useRef(false);
@@ -40,10 +47,10 @@ const SignaturePad = ({ value, onChange }) => {
 		canvas.setPointerCapture(event.pointerId);
 		context.beginPath();
 		context.moveTo(point.x, point.y);
-		context.lineWidth = 4;
+		context.lineWidth = Number(width) || 4;
 		context.lineCap = "round";
 		context.lineJoin = "round";
-		context.strokeStyle = "#172554";
+		context.strokeStyle = color || "#172554";
 		drawing.current = true;
 		hasDrawing.current = false;
 		setIsDrawing(true);
@@ -90,6 +97,36 @@ const SignaturePad = ({ value, onChange }) => {
 					حذف التوقيع / إنشاء جديد
 				</button>
 			</div>
+			<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+				<div className="flex flex-col gap-1.5">
+					<label htmlFor="manager-signature-color" className="text-xs font-medium text-slate-600">
+						لون خط التوقيع
+					</label>
+					<input
+						id="manager-signature-color"
+						type="color"
+						value={color}
+						onChange={(event) => onColorChange(event.target.value)}
+						className="h-10 w-full rounded-lg border border-slate-200 bg-white p-1 cursor-pointer"
+					/>
+				</div>
+				<div className="flex flex-col gap-1.5">
+					<label htmlFor="manager-signature-width" className="flex justify-between text-xs font-medium text-slate-600">
+						<span>عرض خط التوقيع</span>
+						<span>{width}px</span>
+					</label>
+					<input
+						id="manager-signature-width"
+						type="range"
+						min="1"
+						max="12"
+						step="1"
+						value={width}
+						onChange={(event) => onWidthChange(Number(event.target.value))}
+						className="h-10 w-full accent-indigo-600"
+					/>
+				</div>
+			</div>
 			<div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white">
 				<canvas
 					ref={canvasRef}
@@ -111,7 +148,9 @@ const SignaturePad = ({ value, onChange }) => {
 					</div>
 				)}
 			</div>
-			<p className="text-[11px] text-slate-500">بعد الرسم، احفظ الإعدادات ليظهر التوقيع على البطاقات.</p>
+			<p className="text-[11px] text-slate-500">
+				لون وسماكة الخط يطبّقان على الرسم الجديد. احذف التوقيع وأعد رسمه بعد تغييرهما، ثم احفظ الإعدادات.
+			</p>
 		</div>
 	);
 };
